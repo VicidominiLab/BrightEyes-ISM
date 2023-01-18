@@ -1,2 +1,0 @@
-.. autosummary::
-   :toctree: modules
