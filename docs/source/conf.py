@@ -58,4 +58,4 @@ html_static_path = ['_static']
 extensions.append('autoapi.extension')
 
 autoapi_type = 'python'
-autoapi_dirs = ['../src/brighteyes_ism']
+autoapi_dirs = ['../../src/brighteyes_ism']
