@@ -1,9 +1,0 @@
-numpy
-scipy
-matplotlib
-scikit-image
-scikit-learn
-poppy
-PyCustomFocus
-h5py
-statsmodels
