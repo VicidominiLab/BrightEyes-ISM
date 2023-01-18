@@ -1,0 +1,7 @@
+build/
+dist/
+src/brighteyes_ism/__pycache__/
+src/brighteyes_ism/*/__pycache__/
+
+*.pyc
+*.pyo
