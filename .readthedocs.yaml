@@ -8,15 +8,12 @@ version: 2
 # Set the version of Python and other tools you might need
 build:
   os: ubuntu-22.04
-  apt_packages:
-    - sphinx-autoapi
   tools:
     python: "3.10"
     # You can also specify other tool versions:
     # nodejs: "19"
     # rust: "1.64"
     # golang: "1.19"
-
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
@@ -25,3 +22,8 @@ sphinx:
 # If using Sphinx, optionally build your docs in additional formats such as PDF
 # formats:
 #    - pdf
+
+# Optionally declare the Python requirements required to build your docs
+python:
+   install:
+   - requirements: docs/requirements.txt
