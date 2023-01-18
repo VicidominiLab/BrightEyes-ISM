@@ -13,11 +13,9 @@
 import os
 import sys
 
-from sphinx.ext import autodoc
+# from sphinx.ext import autodoc
 
 sys.path.insert(0, os.path.abspath('../../src'))
-# sys.path.insert(0, os.path.abspath('../../src/brighteyes_ism'))
-
 
 # -- Project information -----------------------------------------------------
 
@@ -31,7 +29,8 @@ author = 'Alessandro Zunino'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.autosectionlabel']
+extensions = []
+#'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'sphinx.ext.autosectionlabel']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
