@@ -423,9 +423,6 @@ def customPinholes(N, Nx, pxsizex, M, pxdim, pos):
 def SPAD_PSF_2D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, stedPar = None, z_shift=0, spad = None, return_entrance_field = False):
     """
     Calculate PSFs for all pixels of the SPAD array by using FFTs
-    ===========================================================================
-                   << THIS IS USUALLY THE MAIN FUNCTION >>
-    ===========================================================================
 
     Parameters
     ----------

@@ -10,7 +10,10 @@ Welcome to BrightEyes-ISM's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+   brighteyes_ism
+   brighteyes_ism.dataio
+   brighteyes_ism.analysis
+   brighteyes_ism.simulation
 
 Indices and tables
 ==================
