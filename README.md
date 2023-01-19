@@ -30,7 +30,11 @@ The dataio module contains libraries for
 
 ## Installation
 
-You can install `brighteyes-ism` via [pip]:
+You can install `brighteyes-ism` via [pip] directly from GitHub:
+
+    pip install git+https://github.com/Alessandro-Zunino/BrightEyes-ISM
+
+or using the version on [PyPI]:
 
     pip install brighteyes-ism
 
