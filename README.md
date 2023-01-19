@@ -50,6 +50,12 @@ It requires the following Python packages
     h5py
 	statsmodels
 
+## Documentation
+
+You can read the manual of this package on Read the Docs:
+
+https://brighteyes-ism.readthedocs.io/en/latest/autoapi/brighteyes_ism/index.html
+
 ## Contributing
 
 Contributions are very welcome. Tests can be run with [tox], please ensure
