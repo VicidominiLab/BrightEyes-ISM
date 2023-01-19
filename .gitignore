@@ -2,7 +2,7 @@ build/
 dist/
 src/brighteyes_ism/__pycache__/
 src/brighteyes_ism/*/__pycache__/
-src/brighteyes_ism.egg-info
+src/brighteyes_ism.egg-info/
 src/brighteyes_ism.egg-info/*
 
 *.pyc

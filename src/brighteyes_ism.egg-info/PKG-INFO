@@ -5,12 +5,10 @@ Summary: A toolbox for analysing and simulating ISM images
 Home-page: https://github.com/VicidominiLab/brighteyes-ism
 Author: Alessandro Zunino
 Author-email: Alessandro Zunino <alessandro.zunino@iit.it>
-License: LGPL-3.0-only
 Project-URL: Homepage, https://github.com/VicidominiLab/brighteyes-ism
 Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
-Requires-Python: >=3.7
+Requires-Python: >=3.10
 Description-Content-Type: text/markdown
 Provides-Extra: testing
 License-File: LICENSE
