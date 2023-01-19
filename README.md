@@ -48,6 +48,7 @@ It requires the following Python packages
 	poppy
 	PyCustomFocus
     h5py
+    tqdm
 	statsmodels
 
 ## Documentation
