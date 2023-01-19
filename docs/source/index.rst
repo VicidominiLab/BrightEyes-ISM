@@ -7,4 +7,6 @@ Welcome to BrightEyes-ISM's documentation!
 ==========================================
 
 .. toctree::
-   autoapi/brighteyes_ism/index
+   autoapi/brighteyes_ism/analysis/index
+   autoapi/brighteyes_ism/simulatons/index
+   autoapi/brighteyes_ism/dataio/index
