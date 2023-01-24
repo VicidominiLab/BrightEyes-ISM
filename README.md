@@ -1,6 +1,6 @@
 # BrightEyes-ISM
 
-[![License](https://img.shields.io/pypi/l/napari-ISM.svg?color=green)](https://github.com/VicidominiLab/ISM-processing/raw/main/LICENSE)
+[![License](https://img.shields.io/pypi/l/napari-ISM.svg?color=green)](https://github.com/VicidominiLab/BrightEyes-ISM/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/napari-ISM.svg?color=green)](https://pypi.org/project/napari-ISM)
 [![Python Version](https://img.shields.io/pypi/pyversions/napari-ISM.svg?color=green)](https://python.org)
 <!--
@@ -32,7 +32,7 @@ The dataio module contains libraries for
 
 You can install `brighteyes-ism` via [pip] directly from GitHub:
 
-    pip install git+https://github.com/Alessandro-Zunino/BrightEyes-ISM
+    pip install git+https://github.com/VicidominiLab/BrightEyes-ISM
 
 or using the version on [PyPI]:
 
