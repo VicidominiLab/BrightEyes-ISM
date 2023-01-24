@@ -15,7 +15,7 @@ License-File: LICENSE
 
 # BrightEyes-ISM
 
-[![License](https://img.shields.io/pypi/l/napari-ISM.svg?color=green)](https://github.com/VicidominiLab/ISM-processing/raw/main/LICENSE)
+[![License](https://img.shields.io/pypi/l/napari-ISM.svg?color=green)](https://github.com/VicidominiLab/BrightEyes-ISM/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/napari-ISM.svg?color=green)](https://pypi.org/project/napari-ISM)
 [![Python Version](https://img.shields.io/pypi/pyversions/napari-ISM.svg?color=green)](https://python.org)
 <!--
@@ -45,7 +45,11 @@ The dataio module contains libraries for
 
 ## Installation
 
-You can install `brighteyes-ism` via [pip]:
+You can install `brighteyes-ism` via [pip] directly from GitHub:
+
+    pip install git+https://github.com/VicidominiLab/BrightEyes-ISM
+
+or using the version on [PyPI]:
 
     pip install brighteyes-ism
 
@@ -59,7 +63,14 @@ It requires the following Python packages
 	poppy
 	PyCustomFocus
     h5py
+    tqdm
 	statsmodels
+
+## Documentation
+
+You can read the manual of this package on Read the Docs:
+
+https://brighteyes-ism.readthedocs.io/en/latest/autoapi/brighteyes_ism/index.html
 
 ## Contributing
 
@@ -69,7 +80,7 @@ the coverage at least stays the same before you submit a pull request.
 ## License
 
 Distributed under the terms of the [GNU GPL v3.0] license,
-"ISM-processing" is free and open source software
+"BrightEyes-ISM" is free and open source software
 
 ## Issues
 

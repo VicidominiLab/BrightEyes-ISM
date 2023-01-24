@@ -1,8 +1,8 @@
 # BrightEyes-ISM
 
-[![License](https://img.shields.io/pypi/l/napari-ISM.svg?color=green)](https://github.com/VicidominiLab/BrightEyes-ISM/main/LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/napari-ISM.svg?color=green)](https://pypi.org/project/napari-ISM)
-[![Python Version](https://img.shields.io/pypi/pyversions/napari-ISM.svg?color=green)](https://python.org)
+[![License](https://img.shields.io/pypi/l/napari-ISM.svg?color=green)](https://github.com/VicidominiLab/BrightEyes-ISM/blob/main/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/brighteyes-ism.svg?color=green)](https://pypi.org/project/brighteyes-ism/)
+[![Python Version](https://img.shields.io/pypi/pyversions/brighteyes-ism.svg?color=green)](https://python.org)
 <!--
 [![tests](https://github.com/VicidominiLab/napari-ISM/workflows/tests/badge.svg)](https://github.com/VicidominiLab/napari-ISM/actions)
 [![codecov](https://codecov.io/gh/VicidominiLab/napari-ISM/branch/main/graph/badge.svg)](https://codecov.io/gh/VicidominiLab/napari-ISM)

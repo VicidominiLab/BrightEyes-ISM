@@ -6,6 +6,7 @@ matplotlib
 joblib
 poppy
 PyCustomFocus
+tqdm
 h5py
 statsmodels
 
