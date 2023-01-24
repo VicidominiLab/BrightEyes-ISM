@@ -12,9 +12,9 @@
 A toolbox for analysing and simulating Image Scanning Microscopy (ISM) datasets.
 The analysis module contains libraries for:
 
-* Adaptive Pixel Reassignment (https://doi.org/10.1364/JOSAA.37.000154)
-* Focus-ISM (https://doi.org/10.1101/2022.04.28.489892 )
-* Image Deconvolution (https://doi.org/10.1038/s41592-018-0291-9)
+* Adaptive Pixel Reassignment (https://doi.org/10.1038/s41592-018-0291-9)
+* Focus-ISM (https://doi.org/10.1038/s41467-022-35333-y)
+* Image Deconvolution (https://doi.org/10.48550/arXiv.2211.12510)
 * Fourier Ring Correlation (https://doi.org/10.1038/s41467-019-11024-z)
 
 The simulation module contains libraries for:
