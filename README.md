@@ -53,6 +53,10 @@ It requires the following Python packages
 
 ## Documentation
 
+You can find an example of usage here:
+
+https://github.com/VicidominiLab/BrightEyes-ISM/tree/main/examples
+
 You can read the manual of this package on Read the Docs:
 
 https://brighteyes-ism.readthedocs.io/en/latest/autoapi/brighteyes_ism/index.html
