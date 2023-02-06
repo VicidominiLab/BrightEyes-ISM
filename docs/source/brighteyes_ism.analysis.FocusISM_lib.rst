@@ -1,4 +1,4 @@
-brighteyes\_ism.analysis.FocusISM\_lib module
+FocusISM\_lib
 =============================================
 
 .. automodule:: brighteyes_ism.analysis.FocusISM_lib

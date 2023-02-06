@@ -1,13 +1,10 @@
-brighteyes\_ism.dataio package
+dataio
 ==============================
 
 .. automodule:: brighteyes_ism.dataio
    :members:
    :undoc-members:
    :show-inheritance:
-
-Submodules
-----------
 
 .. toctree::
    :maxdepth: 4

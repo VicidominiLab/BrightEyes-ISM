@@ -1,4 +1,4 @@
-brighteyes\_ism.analysis.Deconv\_lib module
+Deconv\_lib
 ===========================================
 
 .. automodule:: brighteyes_ism.analysis.Deconv_lib

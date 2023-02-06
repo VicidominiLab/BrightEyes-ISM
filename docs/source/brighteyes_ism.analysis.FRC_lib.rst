@@ -1,4 +1,4 @@
-brighteyes\_ism.analysis.FRC\_lib module
+FRC\_lib
 ========================================
 
 .. automodule:: brighteyes_ism.analysis.FRC_lib

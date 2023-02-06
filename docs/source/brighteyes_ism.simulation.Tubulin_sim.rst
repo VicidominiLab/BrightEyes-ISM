@@ -1,4 +1,4 @@
-brighteyes\_ism.simulation.Tubulin\_sim module
+Tubulin\_sim
 ==============================================
 
 .. automodule:: brighteyes_ism.simulation.Tubulin_sim

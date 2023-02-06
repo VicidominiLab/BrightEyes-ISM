@@ -1,13 +1,10 @@
-brighteyes\_ism.simulation package
+simulation
 ==================================
 
 .. automodule:: brighteyes_ism.simulation
    :members:
    :undoc-members:
    :show-inheritance:
-
-Submodules
-----------
 
 .. toctree::
    :maxdepth: 4

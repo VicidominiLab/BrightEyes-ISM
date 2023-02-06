@@ -1,4 +1,4 @@
-brighteyes\_ism.dataio.mcs module
+mcs
 =================================
 
 .. automodule:: brighteyes_ism.dataio.mcs

@@ -1,4 +1,4 @@
-brighteyes\_ism package
+brighteyes\_ism
 =======================
 
 .. automodule:: brighteyes_ism

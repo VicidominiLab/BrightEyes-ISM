@@ -1,4 +1,4 @@
-brighteyes\_ism.analysis.Tools\_lib module
+Tools\_lib
 ==========================================
 
 .. automodule:: brighteyes_ism.analysis.Tools_lib

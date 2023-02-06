@@ -1,13 +1,10 @@
-brighteyes\_ism.analysis package
+analysis
 ================================
 
 .. automodule:: brighteyes_ism.analysis
    :members:
    :undoc-members:
    :show-inheritance:
-
-Submodules
-----------
 
 .. toctree::
    :maxdepth: 4

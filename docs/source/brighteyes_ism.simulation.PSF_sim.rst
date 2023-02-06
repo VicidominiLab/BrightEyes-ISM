@@ -1,4 +1,4 @@
-brighteyes\_ism.simulation.PSF\_sim module
+PSF\_sim
 ==========================================
 
 .. automodule:: brighteyes_ism.simulation.PSF_sim

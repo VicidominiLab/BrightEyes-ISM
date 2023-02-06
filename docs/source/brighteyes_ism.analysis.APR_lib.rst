@@ -1,4 +1,4 @@
-brighteyes\_ism.analysis.APR\_lib module
+APR\_lib
 ========================================
 
 .. automodule:: brighteyes_ism.analysis.APR_lib
