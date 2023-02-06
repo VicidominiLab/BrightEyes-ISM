@@ -10,6 +10,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath('../../src/brighteyes_ism'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 
 project = 'BrightEyes-ISM'
