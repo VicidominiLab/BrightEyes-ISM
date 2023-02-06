@@ -1,7 +1,7 @@
 FocusISM\_lib
 =============================================
 
-.. automodule:: FocusISM_lib
+.. automodule:: brighteyes_ism.analysis.FocusISM_lib
    :members:
    :undoc-members:
    :show-inheritance:
