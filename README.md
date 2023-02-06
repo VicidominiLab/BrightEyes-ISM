@@ -59,7 +59,7 @@ https://github.com/VicidominiLab/BrightEyes-ISM/tree/main/examples
 
 You can read the manual of this package on Read the Docs:
 
-https://brighteyes-ism.readthedocs.io/en/latest/autoapi/brighteyes_ism/index.html
+https://brighteyes-ism.readthedocs.io
 
 ## Contributing
 
