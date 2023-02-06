@@ -3,9 +3,19 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to BrightEyes-ISM's documentation!
+BrightEyes-ISM's documentation
 ==========================================
 .. toctree::
+   :caption: Usage
+   :maxdepth: 8
+
+    citing
+    installation
+    importing
+    example
+
+.. toctree::
+   :caption: Modules
    :maxdepth: 8
 
    brighteyes_ism.analysis
