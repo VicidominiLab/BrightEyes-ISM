@@ -1,1 +1,2 @@
 sphinx-autodocgen
+brighteyes-ism
