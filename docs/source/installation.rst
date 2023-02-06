@@ -1,19 +1,18 @@
 Installation
 ===============================
 
-The source code can be found at https://github.com/VicidominiLab/BrightEyes-ISM. The package can be installed directly from GitHub:
+The source code can be found at https://github.com/VicidominiLab/BrightEyes-ISM. The latest version of the package can be installed directly from GitHub:
 
 .. code-block:: python
 
    pip install git+https://github.com/VicidominiLab/BrightEyes-ISM
 
 
-Or it can be installed using pip:
+Or the most recent stable version can be installed using pip:
 
 .. code-block:: python
 
    pip install brighteyes-ism
-
 
 We also provide most of the package's functionalities via a Napari plugin, which can be used as a graphical user interface.
 The plugin is called Napari-ISM and can be found at https://github.com/VicidominiLab/napari-ISM. It can be installed using pip:
