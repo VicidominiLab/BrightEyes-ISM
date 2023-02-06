@@ -8,11 +8,8 @@ BrightEyes-ISM's documentation
 .. toctree::
    :caption: Usage
    :maxdepth: 8
-
-    citing
-    installation
-    importing
-    example
+   
+   installation
 
 .. toctree::
    :caption: Modules
