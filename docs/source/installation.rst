@@ -52,4 +52,24 @@ The modules can be imported as in the following example
    import brighteyes_ism.simulation.PSF_sim as psf
    import brighteyes_ism.dataio.mcs as mcs
    
-Note that the installation require an hyphen symbol, but the import requires an underscore symbol.
+Note that the installation requires an hyphen symbol (brighteyes-ism), but the import requires an underscore symbol (brighteyes_ism).
+
+Example
+============
+
+An example of usage of BrightEyes-ISM can be found in the following notebook: https://github.com/VicidominiLab/BrightEyes-ISM/blob/main/examples/BrightEyes_ISM_demo.ipynb
+
+Citing
+============
+
+BrightEyes-ISM can be cited as 
+
+.. code-block:: python
+
+    
+
+Napari-ISM can be cited as
+
+.. code-block:: python
+
+    
