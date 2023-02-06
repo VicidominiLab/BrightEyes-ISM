@@ -2,6 +2,6 @@ brighteyes_ism
 ==============
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 8
 
    brighteyes_ism
