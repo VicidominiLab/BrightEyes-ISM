@@ -15,9 +15,9 @@ License-File: LICENSE
 
 # BrightEyes-ISM
 
-[![License](https://img.shields.io/pypi/l/napari-ISM.svg?color=green)](https://github.com/VicidominiLab/BrightEyes-ISM/main/LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/napari-ISM.svg?color=green)](https://pypi.org/project/napari-ISM)
-[![Python Version](https://img.shields.io/pypi/pyversions/napari-ISM.svg?color=green)](https://python.org)
+[![License](https://img.shields.io/pypi/l/brighteyes-ism.svg?color=green)](https://github.com/VicidominiLab/BrightEyes-ISM/blob/main/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/brighteyes-ism.svg?color=green)](https://pypi.org/project/brighteyes-ism/)
+[![Python Version](https://img.shields.io/pypi/pyversions/brighteyes-ism.svg?color=green)](https://python.org)
 <!--
 [![tests](https://github.com/VicidominiLab/napari-ISM/workflows/tests/badge.svg)](https://github.com/VicidominiLab/napari-ISM/actions)
 [![codecov](https://codecov.io/gh/VicidominiLab/napari-ISM/branch/main/graph/badge.svg)](https://codecov.io/gh/VicidominiLab/napari-ISM)
@@ -27,9 +27,9 @@ License-File: LICENSE
 A toolbox for analysing and simulating Image Scanning Microscopy (ISM) datasets.
 The analysis module contains libraries for:
 
-* Adaptive Pixel Reassignment (https://doi.org/10.1364/JOSAA.37.000154)
-* Focus-ISM (https://doi.org/10.1101/2022.04.28.489892 )
-* Image Deconvolution (https://doi.org/10.1038/s41592-018-0291-9)
+* Adaptive Pixel Reassignment (https://doi.org/10.1038/s41592-018-0291-9)
+* Focus-ISM (https://doi.org/10.1038/s41467-022-35333-y)
+* Image Deconvolution (https://doi.org/10.48550/arXiv.2211.12510)
 * Fourier Ring Correlation (https://doi.org/10.1038/s41467-019-11024-z)
 
 The simulation module contains libraries for:
@@ -68,6 +68,10 @@ It requires the following Python packages
 
 ## Documentation
 
+You can find an example of usage here:
+
+https://github.com/VicidominiLab/BrightEyes-ISM/tree/main/examples
+
 You can read the manual of this package on Read the Docs:
 
 https://brighteyes-ism.readthedocs.io/en/latest/autoapi/brighteyes_ism/index.html
@@ -97,4 +101,4 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 
 [tox]: https://tox.readthedocs.io/en/latest/
 [pip]: https://pypi.org/project/pip/
-[PyPI]: https://pypi.org/
+[PyPI]: https://pypi.org/project/brighteyes-ism/
