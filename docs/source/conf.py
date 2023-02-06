@@ -9,21 +9,10 @@
 import os
 import sys
 
+sys.path.insert(0, os.path.abspath('../../../src/brighteyes_ism'))
 sys.path.insert(0, os.path.abspath('../../src/brighteyes_ism'))
 sys.path.insert(0, os.path.abspath('../..'))
-
-
-import mock
-
-MOCK_MODULES = [
-    'brighteyes_ism',
-    'brighteyes_ism.analysis',
-    'brighteyes_ism.dataio',
-    'brighteyes_ism.simulation',]
-
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
-    
+  
 
 project = 'BrightEyes-ISM'
 copyright = '2023, A. Zunino'
