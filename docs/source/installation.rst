@@ -19,6 +19,10 @@ The dataio module contains libraries for
 
     * Reading the data and metadata from the MCS software (https://github.com/VicidominiLab/BrightEyes-MCS)
 
+
+Note that all the image processing functions assume that the detector array has a squared geometry.
+Datasets acquired with a non-cartesian arrangement (e.g. AiryScan) might require additional pre-processing.
+
 Installation
 ===============================
 
