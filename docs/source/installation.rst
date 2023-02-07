@@ -2,22 +2,22 @@ Description
 ===============================
 
 BrightEyes-ISM is a Python package for analysing and simulating Image Scanning Microscopy (ISM) datasets.
+
 The analysis module contains libraries for:
 
-* Adaptive Pixel Reassignment (https://doi.org/10.1038/s41592-018-0291-9)
-* Focus-ISM (https://doi.org/10.1038/s41467-022-35333-y)
-* Image Deconvolution (https://doi.org/10.48550/arXiv.2211.12510)
-* Fourier Ring Correlation (https://doi.org/10.1038/s41467-019-11024-z)
+    * Adaptive Pixel Reassignment (https://doi.org/10.1038/s41592-018-0291-9)
+    * Focus-ISM (https://doi.org/10.1038/s41467-022-35333-y)
+    * Image Deconvolution (https://doi.org/10.48550/arXiv.2211.12510)
+    * Fourier Ring Correlation (https://doi.org/10.1038/s41467-019-11024-z)
 
 The simulation module contains libraries for:
 
-* Generation of ISM point spread functions (https://doi.org/10.1016/j.cpc.2022.108315)
-* Generation of tubulin phantom samples
+    * Generation of ISM point spread functions (https://doi.org/10.1016/j.cpc.2022.108315)
+    * Generation of tubulin phantom samples
 
 The dataio module contains libraries for
 
-* Reading the data and metadata from the MCS software (https://github.com/VicidominiLab/BrightEyes-MCS)
-
+    * Reading the data and metadata from the MCS software (https://github.com/VicidominiLab/BrightEyes-MCS)
 
 Installation
 ===============================
