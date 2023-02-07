@@ -49,7 +49,7 @@ The plugin is called Napari-ISM and can be found at https://github.com/Vicidomin
 Dependencies
 ============
 
-BrightEyes-ISM requires Python >= 3.10. The package also needs the following packages:
+BrightEyes-ISM requires Python >= 3.10 and the following packages:
 
 .. code-block:: python
 
