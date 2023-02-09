@@ -8,6 +8,11 @@ BrightEyes-ISM's documentation
 
 BrightEyes-ISM is a Python package for analysing and simulating Image Scanning Microscopy (ISM) datasets.
 
+.. image:: img/BrightEyesISMlogo.jpg
+  :width: 400
+  :alt: BrightEyes-ISM Logo
+
+
 The analysis module contains libraries for:
 
     + Adaptive Pixel Reassignment (https://doi.org/10.1038/s41592-018-0291-9)
