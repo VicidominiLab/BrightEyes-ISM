@@ -8,9 +8,11 @@ BrightEyes-ISM's documentation
 
 BrightEyes-ISM is a Python package for analysing and simulating Image Scanning Microscopy (ISM) datasets.
 
-.. image:: img/BrightEyesISMlogo.jpg
+.. image:: ../img/BrightEyesISMlogo.jpg
   :width: 400
   :alt: BrightEyes-ISM Logo
+  :align: center
+
 
 
 The analysis module contains libraries for:
