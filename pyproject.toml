@@ -4,15 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "brighteyes-ism"
-version = "1.0.0"
+version = "1.0.1"
 authors = [
   { name="Alessandro Zunino", email="alessandro.zunino@iit.it" },
 ]
 description = "A toolbox for analysing and simulating ISM images"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.7"
 license = {file = "LICENSE.txt"}
 classifiers = [
+	"Programming Language :: Python :: 3.7",
 	"Programming Language :: Python :: 3.8",
 	"Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
