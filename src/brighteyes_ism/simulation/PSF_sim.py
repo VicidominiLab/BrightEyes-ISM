@@ -355,71 +355,6 @@ def Pinholes(N, Nx, pxsizex, M, pxpitch, pxdim):
 
     return p
 
-def customPinholes(N, Nx, pxsizex, M, pxdim, pos):
-    """
-    Calculate sensitive regions of the pixels of the SPAD array
-
-    Parameters
-    ----------
-    N : int
-        Number of detector elements in the array in each dimension (typically 5)
-    Nx : int
-        Number of pixels in each dimension in the simulation array (e.g. 1024)
-    pxsize : float
-        Pixel size of the simulation space [nm] (typically 1)
-    M : float
-        Total magnification of the optical system (typically 500)
-    pxdim : float
-        Detector element size [nm] (real space, typically 50000)
-    
-    Returns
-    -------
-    p : np.array(Nx x Nx x N**2)
-        array with the pinholes of each detector element
-    
-    """
-    
-    p = np.zeros((Nx, Nx, N*N))
-    p0 = np.zeros((Nx, Nx))
-    center = Nx//2
-    sizeDet = int(pxdim / M / pxsizex)
-    if np.mod(sizeDet, 2) == 0:
-        sizeDet -= 1 # let this be odd
-    sizeDet = np.max((sizeDet, 1))
-    # dx = -np.round(pos[:,0]/pxsizex).astype('int')
-    # dy = -np.round(pos[:,1]/pxsizex).astype('int')
-    
-    # i = 0
-    # for n in range(N*N):
-    #         ymin = dy[n] - sizeDet//2 + center
-    #         ymax = dy[n] + np.max( (sizeDet//2, 1) ) + center
-    #         xmin = dx[n] - sizeDet//2 + center
-    #         xmax = dx[n] + np.max( (sizeDet//2, 1) ) + center
-    #         p[ymin:ymax, xmin:xmax, i] = 1
-    #         i += 1    
-
-    xmin = center - sizeDet//2
-    xmax = center + sizeDet//2 + 1
-    ymin = center - sizeDet//2
-    ymax = center + sizeDet//2 + 1
-
-    p0[ymin:ymax, xmin:xmax] = 1
-    
-    from scipy.ndimage import shift
-    
-    s= -pos/pxsizex
-    
-    # import matplotlib.pyplot as plt
-    # plt.scatter(s[:,0], s[:,1])
-    
-    for n in range(N*N):
-        p[:,:,n] = shift( p0, s[n,:] )
-        
-    p[p<0.9] = 0
-    p[p>=0.9] = 1
-        
-    return p
-
 def SPAD_PSF_2D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, stedPar = None, z_shift=0, spad = None, return_entrance_field = False):
     """
     Calculate PSFs for all pixels of the SPAD array by using FFTs
@@ -438,16 +373,12 @@ def SPAD_PSF_2D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, stedPar = None,
         Pixel size of the simulation space [nm] (typically 1)
     M : float
         Total magnification of the optical system (typically 500)
-    exPar : np.array(Nx x Nx)
-        array with the excitation PSF OR simSettings object
-        In the latter case, the psf is calculated from the 
-        parameters
-    emPar : np.array(Nx x Nx)
-        with the emission PSF OR simSettings object
-        In the latter case, the psf is calculated from the 
-        parameters
+    exPar : simSettings object
+        object with excitation PSF parameters
+    emPar : simSettings object
+        object with emission PSF parameters
     stedPar : simSettings object
-        used to calculate the depletion beam
+        object with STED beam parameters
     z_shift : float
         Distance from the focal plane at which generate the PSF [nm] (optional)
     spad : np.array( N**2 x Nx x Nx)
@@ -502,7 +433,7 @@ def SPAD_PSF_2D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, stedPar = None,
     else:
         return PSF, detPSF, exPSF
     
-def SPAD_PSF_3D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, Nz, pxsizez):
+def SPAD_PSF_3D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, Nz, pxsizez, stedPar = None, spad = None):
     """
     Calculate PSFs for all pixels of the SPAD array by using FFTs
 
@@ -520,19 +451,19 @@ def SPAD_PSF_3D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, Nz, pxsizez):
         Pixel size of the simulation space [nm] (typically 1)
     M : float
         Total magnification of the optical system (typically 500)
-    exPar : np.array(Nx x Nx)
-        array with the excitation PSF OR simSettings object
-        In the latter case, the psf is calculated from the 
-        parameters
-    emPar : np.array(Nx x Nx)
-        with the emission PSF OR simSettings object
-        In the latter case, the psf is calculated from the 
-        parameters
+    exPar : simSettings object
+        object with excitation PSF parameters
+    emPar : simSettings object
+        object with emission PSF parameters
     Nz : int
         number of axial planes (typically an odd integer)
         the planes are symmetrically calculated around the focal plane (z = 0)
     pxisez : float
         distance between axial planes [nm]
+    stedPar : simSettings object
+        object with STED beam parameters
+    spad : np.array( N**2 x Nx x Nx)
+        Pinholes distribution . If none it is calculated using the input parameters
     
     Returns
     -------
@@ -547,7 +478,8 @@ def SPAD_PSF_3D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, Nz, pxsizez):
     
     zeta = ( np.arange(Nz) - Nz//2 ) * pxsizez
     
-    spad = Pinholes(N, Nx, pxsizex, M, pxpitch, pxdim)
+    if spad is None:
+        spad = Pinholes(N, Nx, pxsizex, M, pxpitch, pxdim)
     
     PSF = np.empty( (Nz, Nx, Nx, N*N) )
     detPSF = np.empty( (Nz, Nx, Nx, N*N) )
@@ -555,7 +487,7 @@ def SPAD_PSF_3D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, Nz, pxsizez):
     
     for i, z in enumerate(zeta):
         print( f'Calculating the PSFs at z = {z} nm')
-        PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, z_shift = z, spad = spad)
+        PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, stedPar = stedPar, z_shift = z, spad = spad)
         
     return PSF, detPSF, exPSF
 
