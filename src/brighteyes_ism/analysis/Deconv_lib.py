@@ -213,7 +213,7 @@ def deconv_Wiener_FFT(h, i, reg = 0):
     return out
 
 
-def deconv_RL_FFT(h, i, max_iter = 50, epsilon = None, reg = 0):
+def deconv_RL_FFT(h, i, max_iter = 50, epsilon = None, reg = 0, out = 'last'):
     """
     Richardson-Lucy deconvolution, performed using FFT
 
@@ -237,6 +237,9 @@ def deconv_RL_FFT(h, i, max_iter = 50, epsilon = None, reg = 0):
         Deconvolved image
     
     """
+    if out == 'all':
+        sz = [max_iter, i.shape[0], i.shape[1]]
+        obj_all = np.empty(sz)
     
     if epsilon is None:
        epsilon = np.finfo(float).eps    
@@ -254,12 +257,18 @@ def deconv_RL_FFT(h, i, max_iter = 50, epsilon = None, reg = 0):
         C = obj / ( 1 + reg * obj )
         obj = B * C
         
+        if out == 'all':
+            obj_all[k] = obj.copy()
+        
         k += 1
     
-    return obj
+    if out == 'last':
+        return obj
+    elif out == 'all':
+        return obj_all
 
 
-def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None, reg = 0):
+def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None, reg = 0, out = 'last', verbose = False):
     """
     Multi-image Richardson-Lucy deconvolution, performed using FFT.
     It deconvolves the entire dataset, returning a single deconvoluted image.
@@ -287,6 +296,10 @@ def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None,
     
     """
     
+    if out == 'all':
+        sz = [max_iter, i.shape[0], i.shape[1]]
+        obj_all = np.empty(sz)
+    
     if bkg is None:
         bkg = np.zeros(i.shape)
     
@@ -305,7 +318,10 @@ def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None,
     
     k = 0
     while k < max_iter:
-    
+        
+        if verbose == True:
+            print(k)
+        
         tmp = 0        
         
         for n in range(N):
@@ -317,12 +333,23 @@ def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None,
                 tmp += B
             
         obj = ( obj * tmp / ( 1 + reg * obj ) ) # * s[n]
+
+        if out == 'all':
+            obj_all[k] = obj.copy()
+            
         k += 1
 
     if pad is not None:
-        obj = UnpadDataset(obj, pad)
-
-    return obj
+        if out == 'last':
+            obj = UnpadDataset(obj, pad)
+        elif out == 'all':
+            for n in range(max_iter):
+                obj_all[n] = UnpadDataset(obj_all[n], pad)
+            
+    if out == 'last':
+        return obj
+    elif out == 'all':
+        return obj_all
 
 def PSF_FRC(i_1, i_2):
     """
