@@ -245,3 +245,28 @@ def RadialSpectrum(img, pxsize: float = 1, normalize: bool = True):
         ftR /= np.max( ftR )
     
     return ftR, space_f
+
+#%%
+
+from matplotlib_scalebar.scalebar import ScaleBar
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+def ShowImg(fig, ax, image, pxsize_x, clabel,  cmap = 'hot'):
+    
+    im = ax.imshow( image, cmap = cmap )
+    ax.axis('off')
+    
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cbar = fig.colorbar(im, cax=cax, ticks = np.floor( [np.min(image), np.max(image)] ), )
+    ax.text(1.1,0.4, clabel, rotation=90, transform=ax.transAxes)
+    
+    scalebar = ScaleBar(
+    pxsize_x, "um", # default, extent is calibrated in meters
+    box_alpha=0,
+    color='w',
+    length_fraction=0.25)
+    
+    ax.add_artist(scalebar)
+    
+    return None
