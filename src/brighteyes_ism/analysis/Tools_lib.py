@@ -258,8 +258,14 @@ def ShowImg(fig, ax, image, pxsize_x, clabel,  cmap = 'hot'):
     
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
-    cbar = fig.colorbar(im, cax=cax, ticks = np.floor( [np.min(image), np.max(image)] ), )
-    ax.text(1.1,0.4, clabel, rotation=90, transform=ax.transAxes)
+    cbar = fig.colorbar(im, cax=cax, ticks = [])# np.floor( [np.min(image), np.max(image)] ), )
+    # ax.text(1.0,0.4, clabel, rotation=90, transform=ax.transAxes)
+
+    cbar.ax.set_ylabel(clabel, labelpad=-11, rotation=90)
+    
+    cbar.ax.text(1.02, 0.9, f'{ int(np.floor(np.max(image))) }', rotation=90, transform=ax.transAxes)
+    
+    cbar.ax.text(1.02, 0.02, f'{ int(np.floor(np.min(image))) }', rotation=90, transform=ax.transAxes, color = 'white')
     
     scalebar = ScaleBar(
     pxsize_x, "um", # default, extent is calibrated in meters
