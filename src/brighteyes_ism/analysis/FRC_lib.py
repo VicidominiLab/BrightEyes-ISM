@@ -257,7 +257,50 @@ def FRC_resolution(I1, I2, px = 1, method = 'fixed'):
     
     return res_um, k, frc, k_interp, frc_smooth, th
 
-def plotFRC(res_um, k, frc, k_interp, frc_smooth, th):
+def timeFRC(dset, px = 1, method = 'fixed'):
+    """
+    Fourier Ring Correlation analysis. It requires a single dataset with a
+    temporal dimension to generate two images using the even and odd indices
+    of the time axis. Then, it estimates the resolution using the FRC analysis.
+
+    Parameters
+    ----------
+    dset : np.ndarray
+        dataset (Nx x Ny x Nt)
+    px : float
+        Pixel size of the images
+    Method : str
+        Threshold criterium. If 'fixed', it uses the 1/7 threshold.
+        Other possibilities are '3sigma' and '5sigma'
+
+    Returns
+    -------
+    res_um : float
+        Estimated resolution, in real units
+    k : np.array( np.sqrt(N**2 + M**2) )
+        Array of spatial frequencies
+    frc : np.array( np.sqrt(N**2 + M**2) )
+        Array of raw FRC
+    k_interp : np.array( 100 x np.sqrt(N**2 + M**2) )
+        Interpolated array of spatial frequencies
+    frc_smooth : np.array( 100 x np.sqrt(N**2 + M**2) )
+        Interpolated and smoothed FRC curve
+    th : np.array( 100 x np.sqrt(N**2 + M**2) )
+        Threshold curve
+    """
+    
+    if dset.shape[-1] % 2 == 0:
+        img_even = dset[:, :, 0::2].sum(axis = -1)
+        img_odd  = dset[:, :, 1::2].sum(axis = -1)
+    else:
+        img_even = dset[:, :, 0:-1:2].sum(axis = -1)
+        img_odd  = dset[:, :, 1::2].sum(axis = -1)
+    
+    res_um, k, frc, k_interp, frc_smooth, th = FRC_resolution(img_even, img_odd, px = px, method = method)
+    
+    return res_um, k, frc, k_interp, frc_smooth, th
+
+def plotFRC(res_um, k, frc, k_interp, frc_smooth, th, fig = None, ax = None):
     """
     Visualization of the results of the FRC curve. The inputs are exactly the
     outputs of FRC_resolution function.
@@ -282,22 +325,26 @@ def plotFRC(res_um, k, frc, k_interp, frc_smooth, th):
     None.
     """
     
-    plt.figure()
-    plt.plot(k, frc, '.', label = 'FRC - raw')
-    plt.plot(k_interp, frc_smooth, '.', label = 'FRC - smoothed')
-    plt.plot(k_interp, th, label = 'Threshold')
+    if fig == None or ax == None:
+        fig, ax = plt.subplots()
+        
+    ax.plot(k, frc, '.', label = 'FRC - raw')
+    ax.plot(k_interp, frc_smooth, '.', label = 'FRC - smoothed')
+    ax.plot(k_interp, th, label = 'Threshold')
     
-    plt.legend()
+    ax.legend()
     
     idx = (np.abs(k_interp - 1/res_um)).argmin()
     
-    plt.plot(k_interp[idx], frc_smooth[idx], 'o', markersize = 10)
+    ax.plot(k_interp[idx], frc_smooth[idx], 'o', markersize = 10)
     
     k_max = k[-1]*np.sqrt( 2 )/2
-    plt.xlim( ( 0, k_max ) )
-    plt.ylim( ( 0, 1 ) )
+    ax.set_xlim( ( 0, k_max ) )
+    ax.set_ylim( ( -0.05, 1.05 ) )
     
-    plt.xlabel(r'k ($\mu m ^{-1}$)')
-    plt.ylabel('FRC')
+    ax.set_xlabel(r'k ($\mu m ^{-1}$)')
+    ax.set_ylabel('FRC')
     
-    return None
+    ax.set_title(f'Resolution = {res_um:.3f} $\mu m$')
+    
+    return fig, ax

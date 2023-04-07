@@ -248,10 +248,18 @@ def RadialSpectrum(img, pxsize: float = 1, normalize: bool = True):
 
 #%%
 
+import matplotlib.pyplot as plt
+
 from matplotlib_scalebar.scalebar import ScaleBar
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.colors import Normalize
 
-def ShowImg(fig, ax, image, pxsize_x, clabel,  cmap = 'hot'):
+import numbers
+
+def ShowImg(image, pxsize_x, clabel, fig = None, ax = None, cmap = 'hot'):
+    
+    if fig == None or ax == None:
+        fig, ax = plt.subplots()
     
     im = ax.imshow( image, cmap = cmap )
     ax.axis('off')
@@ -275,4 +283,80 @@ def ShowImg(fig, ax, image, pxsize_x, clabel,  cmap = 'hot'):
     
     ax.add_artist(scalebar)
     
-    return None
+    return fig, ax
+
+
+def ShowDataset(dset, cmap = 'hot', pxsize = None, normalize = False, colorbar = False, xlims = [None,None], ylims = [None,None], figsize = (6,6)):
+    
+    N = int( np.sqrt(dset.shape[-1]) )
+    
+    if normalize == True:
+        vmin = np.min(dset)
+        vmax = np.max(dset)
+        norm = Normalize(vmin = vmin, vmax = vmax)
+    else:
+        norm = Normalize()
+        
+    fig, ax = plt.subplots(N, N, sharex=True, sharey=True, figsize=figsize)
+    for i in range(N*N):
+        idx = np.unravel_index(i, [N,N])
+        im = ax[idx].imshow(dset[:,:,i], norm = norm, cmap = cmap)
+        ax[idx].set_xlim(xlims)
+        ax[idx].set_ylim(ylims)
+        ax[idx].axis('off')
+    
+    if isinstance(pxsize, numbers.Number):
+        scalebar = ScaleBar(
+        pxsize, "um", # default, extent is calibrated in meters
+        box_alpha=0,
+        color='w',
+        location = 'lower right',
+        length_fraction=0.5)
+        
+        ax[-1,-1].add_artist(scalebar)
+    
+    fig.tight_layout()
+    if colorbar == True and normalize == True:
+        y0 = ax[-1,-1].get_position().y0
+        y1 = ax[0,0].get_position().y1
+        height = y1 - y0
+        
+        fig.subplots_adjust(right=0.92)
+        cbar_ax = fig.add_axes([0.94, y0, 0.05, height])
+        cbar = fig.colorbar(im, cax=cbar_ax, ticks = [])
+        
+        cbar.ax.text(0.3, 0.95, f'{ int(np.floor(vmax)) }', rotation=90, transform=cbar_ax.transAxes)
+        
+        cbar.ax.text(0.3, 0.02, f'{ int(np.floor(vmin)) }', rotation=90, transform=cbar_ax.transAxes, color = 'white')
+        
+    return fig
+
+
+def PlotShiftVectors(shift_vectors, pxsize = 1, labels = True, color = None, cmap = 'summer_r', fig = None, ax = None):
+    
+    if fig == None or ax == None:
+        fig, ax = plt.subplots()
+        
+    shift = shift_vectors * pxsize
+    
+    Nch = shift.shape[0]
+    
+    if color == 'auto':
+        N = int( np.sqrt( Nch ) )
+        x = np.arange(-(N//2), N//2 +1)
+        X,Y = np.meshgrid(x,x)
+        R = np.sqrt(X**2 + Y**2)
+        color = R
+    
+    ax.scatter(shift[:,0], shift[:,1], s = 80, c = color, edgecolors = 'black', cmap = cmap)
+    ax.set_aspect('equal', 'box')
+    
+    if labels == True:
+        for n in range(Nch):
+            ax.annotate(str(n), shift[n], xytext=(3, 3), textcoords= 'offset points')
+    
+    ax.set_xlabel(r'Shift$_x$ (nm)')
+    ax.set_ylabel(r'Shift$_y$ (nm)')
+    ax.set_title('Shift vectors')
+    
+    return fig, ax

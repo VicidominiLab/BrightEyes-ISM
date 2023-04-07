@@ -66,7 +66,10 @@ class metadata:
             
         # MCS version
         self.version = f.attrs['data_format_version']
-        self.comment = f.attrs['comment']
+        try:
+            self.comment = f.attrs['comment']
+        except:
+            self.comment = ''
         
         # range in um
         self.rangex = f['configurationGUI'].attrs['range_x']

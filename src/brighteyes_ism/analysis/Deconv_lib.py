@@ -380,7 +380,7 @@ def PSF_FRC(i_1, i_2):
     
     usf = 100
     
-    shift_frc, _ = APR.APR(i_1, usf, ref, 1, degree=None)
+    shift_frc, _ = APR.APR(i_1, usf, ref, 1)
 
     shift_frc_x, shift_frc_y = -shift_frc[:,1], -shift_frc[:,0]
     
@@ -390,7 +390,7 @@ def PSF_FRC(i_1, i_2):
     y = np.arange(sz[1]) - sz[1]//2
     X, Y = np.meshgrid(x, y)
 
-    Fingerprint = np.sum(i_1 + i_2, axis = (0,1) )
+    Fingerprint = np.sum(i_1 + i_2, axis = (0,1) ).astype('float64')
     Fingerprint /= np.sum(Fingerprint)
 
     for i in range( sz[-1] ):
@@ -400,7 +400,7 @@ def PSF_FRC(i_1, i_2):
     return psf_frc
 
 
-def FRC_MultiImg_RL_FFT(i_1, i_2, max_iter = 50, pad = None, epsilon = None, reg = 0, sum_data = True):
+def FRC_MultiImg_RL_FFT(dset, max_iter = 50, pad = None, epsilon = None, reg = 0):
     """
     Multi-image Richardson-Lucy deconvolution, performed using FFT.
     It deconvolves the entire dataset, returning a single deconvoluted image.
@@ -409,10 +409,8 @@ def FRC_MultiImg_RL_FFT(i_1, i_2, max_iter = 50, pad = None, epsilon = None, reg
 
     Parameters
     ----------
-    i_1 : np.array(Nx x Ny x Nch)
-        ISM dataset
-    i_2 : np.array(Nx x Ny x Nch)
-        ISM dataset
+    i_1 : np.ndarray
+        ISM dataset (Nx x Ny x Nt x Nch)
     max_iter : int
         Number of iteration
     pad : np.array(Nx x Ny x Nch)
@@ -422,9 +420,7 @@ def FRC_MultiImg_RL_FFT(i_1, i_2, max_iter = 50, pad = None, epsilon = None, reg
         Used to avoid division by zero (default = float.eps)
     reg : float
         Regularization parameter (Tikhonov)
-    sum_data : bool
-        Sum both images
-    
+        
     Returns
     -------
     img_deconv : np.array(Nx x Ny)
@@ -432,14 +428,20 @@ def FRC_MultiImg_RL_FFT(i_1, i_2, max_iter = 50, pad = None, epsilon = None, reg
     
     """
     
-    psf_frc = PSF_FRC(i_1, i_2)
-    
-    if sum_data == True:
-        img = i_1 + i_2
-        obj = MultiImg_RL_FFT(psf_frc, img, max_iter = max_iter, pad = pad, epsilon = epsilon, reg = reg)
+    Nt = dset.shape[-2]
+   
+    if Nt % 2 == 0:
+        img_even = dset[:, :, 0::2, :].sum(axis = -2)
+        img_odd  = dset[:, :, 1::2, :].sum(axis = -2)
     else:
-        obj = MultiImg_RL_FFT(psf_frc, i_1, max_iter = max_iter, pad = pad, epsilon = epsilon, reg = reg)
-        
+        img_even = dset[:, :, 0:-1:2, :].sum(axis = -2)
+        img_odd  = dset[:, :, 1::2, :].sum(axis = -2)
+    
+    psf_frc = PSF_FRC(img_even, img_odd)
+    
+    img = dset.sum(axis = -2)
+    obj = MultiImg_RL_FFT(psf_frc, img, max_iter = max_iter, pad = pad, epsilon = epsilon, reg = reg)
+ 
     return obj, psf_frc
 
 
