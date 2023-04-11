@@ -329,14 +329,14 @@ def plotFRC(res_um, k, frc, k_interp, frc_smooth, th, fig = None, ax = None):
         fig, ax = plt.subplots()
         
     ax.plot(k, frc, '.', label = 'FRC - raw')
-    ax.plot(k_interp, frc_smooth, '.', label = 'FRC - smoothed')
-    ax.plot(k_interp, th, label = 'Threshold')
+    ax.plot(k_interp, frc_smooth, '-', linewidth = 3, label = 'FRC - smoothed')
+    ax.plot(k_interp, th, linewidth = 3, label = 'Threshold')
     
     ax.legend()
     
     idx = (np.abs(k_interp - 1/res_um)).argmin()
     
-    ax.plot(k_interp[idx], frc_smooth[idx], 'o', markersize = 10)
+    ax.plot(k_interp[idx], frc_smooth[idx], 'o', markersize = 6)
     
     k_max = k[-1]*np.sqrt( 2 )/2
     ax.set_xlim( ( 0, k_max ) )
