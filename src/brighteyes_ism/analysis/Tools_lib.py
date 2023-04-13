@@ -256,12 +256,12 @@ from matplotlib.colors import Normalize
 
 import numbers
 
-def ShowImg(image, pxsize_x, clabel, fig = None, ax = None, cmap = 'hot'):
+def ShowImg(image, pxsize_x, clabel, vmin = None, vmax = None, fig = None, ax = None, cmap = 'hot'):
     
     if fig == None or ax == None:
         fig, ax = plt.subplots()
     
-    im = ax.imshow( image, cmap = cmap )
+    im = ax.imshow( image, vmin = vmin, vmax = vmax, cmap = cmap )
     ax.axis('off')
     
     divider = make_axes_locatable(ax)
