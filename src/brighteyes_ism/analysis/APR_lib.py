@@ -147,11 +147,11 @@ def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool =
     pxsize : float, optional
         Pixel size. The default is 1.
     apodize : bool, optional
-        If True, the dataset is apodized to calcualte the shift-vectors.
+        If True, the dataset is apodized to calculate the shift-vectors.
         The default is True.
     cutoff : float, optional
-        If it is a number, it appplies a low-pass filter at the cutoff value
-        to calcualte the shift-vectors. The default is None.
+        If it is a number, it applies a low-pass filter at the cutoff value
+        to calculate the shift-vectors. The default is None.
     mode : str, optional
         Registration method. It can be a fourier shift ('fourier'')
         or an interpolation ('interp'). The default is 'fourier'.
