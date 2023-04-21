@@ -132,7 +132,7 @@ def rotate(array: np.ndarray, degree: float):
     m = np.dot(j, ( [x, y] ) )
     return m
 
-def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool = True, cutoff: float = None, degree: float = None, mode: str = 'fourier'):
+def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool = True, cutoff: float = None, mode: str = 'fourier'):
     '''
     It performs adaptive pixel reassignment on a single-plane ISM dataset using the phase correlation method.
 
@@ -152,9 +152,6 @@ def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool =
     cutoff : float, optional
         If it is a number, it appplies a low-pass filter at the cutoff value
         to calcualte the shift-vectors. The default is None.
-    degree : float, optional
-        If it is a number, it rotates the shift-vectors by the degree value.
-        The default is None.
     mode : str, optional
         Registration method. It can be a fourier shift ('fourier'')
         or an interpolation ('interp'). The default is 'fourier'.
@@ -168,37 +165,19 @@ def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool =
 
     '''
 
-    # Low-pass filter dataset
-    
-    if cutoff is not None:
-        s = 0.01
-        t = cutoff * pxsize
-        dset = Low_pass(dset, t, s)
-            
-    # Apodize dataset
-    
-    if apodize == True:
-        W = hann2d( dset.shape )
-        dsetW = np.einsum('ijk, ij -> ijk', dset, W)
-    else:
-        dsetW = dset
-    
     # Calculate shifts
     
-    shift_vec, error = ShiftVectors(dsetW, usf, ref)
+    shift_vec, error = ShiftVectors(dset, usf, ref, pxsize = pxsize, apodize = apodize, cutoff = cutoff)
 
-    # Compensate shifts
+    # Register images
     
     result_ism_pc = Reassignment(shift_vec, dset, mode = mode)
 
     shift_vec *= pxsize
 
-    if degree is not None:
-        shift_vec = np.transpose(rotate(shift_vec, degree))
-
     return shift_vec, result_ism_pc
 
-def ShiftVectors(dset: np.ndarray, usf: int, ref: int):
+def ShiftVectors(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool = True, cutoff: float = None):
     '''
     It calculates the shift-vectors from a single-plane ISM dataset using the phase correlation method.
 
@@ -221,12 +200,29 @@ def ShiftVectors(dset: np.ndarray, usf: int, ref: int):
     '''
 
     sz = dset.shape
-    
+
+    # Low-pass filter dataset
+
+    if cutoff is not None:
+        s = 0.01
+        t = cutoff * pxsize
+        dset = Low_pass(dset, t, s)
+
+    # Apodize dataset
+
+    if apodize == True:
+        W = hann2d(dset.shape)
+        dsetW = np.einsum('ijk, ij -> ijk', dset, W)
+    else:
+        dsetW = dset
+
+    # Calculate shift-vectors
+
     shift_vec = np.empty( (sz[-1], 2) )
     error = np.empty( (sz[-1], 2) )
     
     for i in range( sz[-1] ):
-        shift_vec[i,:], error[i,:], diffphase = phase_cross_correlation(dset[:,:, ref], dset[:,:,i], upsample_factor=usf, normalization=None)
+        shift_vec[i,:], error[i,:], diffphase = phase_cross_correlation(dsetW[:,:, ref], dset[:,:,i], upsample_factor=usf, normalization=None)
     
     return shift_vec, error
 
