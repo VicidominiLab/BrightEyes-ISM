@@ -433,9 +433,9 @@ def SPAD_PSF_2D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, stedPar = None,
     else:
         return PSF, detPSF, exPSF
     
-def SPAD_PSF_3D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, Nz, pxsizez, stedPar = None, spad = None):
+def SPAD_PSF_3D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, Nz, pxsizez, stedPar = None, spad = None, stack: str = 'symmetrical'):
     """
-    Calculate PSFs for all pixels of the SPAD array by using FFTs
+    It calculates a z-stack of PSFs for all the elements of the SPAD array detector.
 
     Parameters
     ----------
@@ -464,7 +464,11 @@ def SPAD_PSF_3D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, Nz, pxsizez, st
         object with STED beam parameters
     spad : np.array( N**2 x Nx x Nx)
         Pinholes distribution . If none it is calculated using the input parameters
-    
+    stack : str
+        String that defines the direction along z of the simulation.
+        If "symmetrical", the stack is generated at planes around z = 0 both on the negative and positive directions.
+        Other possible entries are "positive", and "negative".
+        Default: "symmetrical".
     Returns
     -------
     PSF : np.array(Nz x Nx x Nx x N**2)
@@ -475,9 +479,14 @@ def SPAD_PSF_3D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, Nz, pxsizez, st
         array with the excitation PSF
     
     """
-    
-    zeta = ( np.arange(Nz) - Nz//2 ) * pxsizez
-    
+
+    if stack == "symmetrical":
+        zeta = (np.arange(Nz) - Nz//2) * pxsizez
+    elif stack == "positive":
+        zeta = np.arange(Nz) * pxsizez
+    elif stack == "negative":
+        zeta = -np.arange(Nz) * pxsizez
+
     if spad is None:
         spad = Pinholes(N, Nx, pxsizex, M, pxpitch, pxdim)
     
