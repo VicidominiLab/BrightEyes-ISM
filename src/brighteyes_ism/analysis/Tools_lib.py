@@ -294,13 +294,14 @@ def ShowDataset(dset, cmap = 'hot', pxsize = None, normalize = False, colorbar =
         vmin = np.min(dset)
         vmax = np.max(dset)
         norm = Normalize(vmin = vmin, vmax = vmax)
-    else:
-        norm = Normalize()
-        
+
     fig, ax = plt.subplots(N, N, sharex=True, sharey=True, figsize=figsize)
     for i in range(N*N):
         idx = np.unravel_index(i, [N,N])
-        im = ax[idx].imshow(dset[:,:,i], norm = norm, cmap = cmap)
+        if normalize == True:
+            im = ax[idx].imshow(dset[:,:,i], norm = norm, cmap = cmap)
+        else:
+            im = ax[idx].imshow(dset[:, :, i], cmap=cmap)
         ax[idx].set_xlim(xlims)
         ax[idx].set_ylim(ylims)
         ax[idx].axis('off')
