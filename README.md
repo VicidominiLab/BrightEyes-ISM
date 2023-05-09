@@ -14,7 +14,7 @@ The analysis module contains libraries for:
 
 * Adaptive Pixel Reassignment (https://doi.org/10.1038/s41592-018-0291-9)
 * Focus-ISM (https://doi.org/10.1038/s41467-022-35333-y)
-* Image Deconvolution (https://doi.org/10.48550/arXiv.2211.12510)
+* Image Deconvolution (https://doi.org/10.1088/1361-6420/accdc5)
 * Fourier Ring Correlation (https://doi.org/10.1038/s41467-019-11024-z)
 
 The simulation module contains libraries for:
@@ -50,6 +50,7 @@ It requires the following Python packages
     h5py
     tqdm
 	statsmodels
+	matplotlib-scalebar
 
 ## Documentation
 

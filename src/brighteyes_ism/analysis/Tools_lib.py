@@ -286,7 +286,37 @@ def ShowImg(image, pxsize_x, clabel, vmin = None, vmax = None, fig = None, ax = 
     return fig, ax
 
 
-def ShowDataset(dset, cmap = 'hot', pxsize = None, normalize = False, colorbar = False, xlims = [None,None], ylims = [None,None], figsize = (6,6)):
+def ShowDataset(dset: np.ndarray, cmap: str = 'hot', pxsize: float = None, normalize: bool = False,
+                colorbar: bool = False, xlims: list = [None, None], ylims: list = [None, None],
+                figsize: tuple = (6, 6)) -> plt.Figure:
+    '''
+    
+
+    Parameters
+    ----------
+    dset : np.ndarray
+        DESCRIPTION.
+    cmap : str, optional
+        DESCRIPTION. The default is 'hot'.
+    pxsize : float, optional
+        DESCRIPTION. The default is None.
+    normalize : bool, optional
+        DESCRIPTION. The default is False.
+    colorbar : bool, optional
+        DESCRIPTION. The default is False.
+    xlims : list, optional
+        DESCRIPTION. The default is [None, None].
+    ylims : list, optional
+        DESCRIPTION. The default is [None, None].
+    figsize : tuple, optional
+        DESCRIPTION. The default is (6, 6).
+
+    Returns
+    -------
+    fig : TYPE
+        DESCRIPTION.
+
+    '''
     
     N = int( np.sqrt(dset.shape[-1]) )
     

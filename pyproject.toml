@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0", "scikit-image>=0.19.2", "scikit-learn", "numpy", "scipy", "matplotlib", "joblib", "poppy", 	"PyCustomFocus", "h5py", "statsmodels", "tqdm"]
+requires = ["setuptools>=61.0", "scikit-image>=0.19.2", "scikit-learn", "numpy", "scipy", "matplotlib", "joblib", "poppy", 	"PyCustomFocus", "h5py", "statsmodels", "tqdm", "matplotlib-scalebar"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "brighteyes-ism"
-version = "1.1.0"
+version = "1.1.1"
 authors = [
   { name="Alessandro Zunino", email="alessandro.zunino@iit.it" },
 ]
