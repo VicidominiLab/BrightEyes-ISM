@@ -7,7 +7,7 @@ The analysis module contains libraries for:
 
     + Adaptive Pixel Reassignment (https://doi.org/10.1038/s41592-018-0291-9)
     + Focus-ISM (https://doi.org/10.1038/s41467-022-35333-y)
-    + Image Deconvolution (https://doi.org/10.48550/arXiv.2211.12510)
+    + Image Deconvolution (https://doi.org/10.1088/1361-6420/accdc5)
     + Fourier Ring Correlation (https://doi.org/10.1038/s41467-019-11024-z)
 
 The simulation module contains libraries for:
@@ -86,14 +86,6 @@ An example of usage of BrightEyes-ISM can be found in the following notebook: ht
 Citing
 ============
 
-BrightEyes-ISM can be cited as 
+BrightEyes-ISM and Napari-ISM can be cited as
 
-.. code-block:: python
-
-    
-
-Napari-ISM can be cited as
-
-.. code-block:: python
-
-    
+    Zunino, A., Slenders, E., Fersini, F. et al. Open-source tools enable accessible and advanced image scanning microscopy data analysis. Nat. Photon. (2023). https://doi.org/10.1038/s41566-023-01216-x
