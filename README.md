@@ -22,7 +22,7 @@ The simulation module contains libraries for:
 * Generation of ISM point spread functions (https://doi.org/10.1016/j.cpc.2022.108315)
 * Generation of tubulin phantom samples
 
-The dataio module contains libraries for
+The dataio module contains libraries for:
 
 * Reading the data and metadata from the MCS software (https://github.com/VicidominiLab/BrightEyes-MCS)
 
