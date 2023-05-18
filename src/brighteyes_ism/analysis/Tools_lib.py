@@ -256,7 +256,45 @@ from matplotlib.colors import Normalize
 
 import numbers
 
-def ShowImg(image, pxsize_x, clabel, vmin = None, vmax = None, fig = None, ax = None, cmap = 'hot'):
+def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str, vmin: float = None, vmax: float = None, fig: plt.Figure = None, ax: plt.axis = None, cmap: str = 'hot'):
+    """
+    It shows the input image with a scalebar and a colorbar.
+    It returns the corresponding figure and axis.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        Image (Nx x Ny).
+    pxsize_x : float
+        Pixel size in micrometers (um).
+    clabel : str
+        Label of the colorbar.
+    vmin : float, optional
+        Lower bound of the intensity axis.
+        If None, is set to the minimum value of the image.
+        The default is None.
+    vmax : float, optional
+        Upper bound of the intensity axis.
+        If None, is set to the maximum value of the image.
+        The default is None.
+    fig : plt.Figure, optional
+        Figure where to display the plot. If None, a new figure is created.
+        The default is None.
+    ax : plt.axis, optional
+        Axis where to display the plot. If None, a new axis is created.
+        The default is None.
+    cmap : str, optional
+        Colormap, to be chosen within the matplotlib list.
+        The default is 'hot'.
+
+    Returns
+    -------
+    fig : plt.Figure
+        Matplotlib figure.
+    ax : plt.axis
+        Matplotlib axis.
+
+    """
     
     if fig == None or ax == None:
         fig, ax = plt.subplots()
@@ -290,32 +328,34 @@ def ShowDataset(dset: np.ndarray, cmap: str = 'hot', pxsize: float = None, norma
                 colorbar: bool = False, xlims: list = [None, None], ylims: list = [None, None],
                 figsize: tuple = (6, 6)) -> plt.Figure:
     '''
-    
+    It displays all the images of the ISM dataset in a squared grid.
+    It returns the corresponding figure.
 
     Parameters
     ----------
     dset : np.ndarray
-        DESCRIPTION.
+        ISM dataset (Nx x Ny x Nch).
     cmap : str, optional
-        DESCRIPTION. The default is 'hot'.
+        Colormap, to be chosen within the matplotlib list. The default is 'hot'.
     pxsize : float, optional
-        DESCRIPTION. The default is None.
+        Pixel size in micrometers (um). The default is None.
     normalize : bool, optional
-        DESCRIPTION. The default is False.
+        If True, each image is normalized with respect to the whole dataset.
+        If False, each image is normalized to itself.
+        The default is False.
     colorbar : bool, optional
-        DESCRIPTION. The default is False.
+        If true, a colorbar is shown. The default is False.
     xlims : list, optional
-        DESCRIPTION. The default is [None, None].
+        If given, only the region with the x-range is displayed. The default is [None, None].
     ylims : list, optional
-        DESCRIPTION. The default is [None, None].
+        If given, only the region with the y-range is displayed. The default is [None, None].
     figsize : tuple, optional
-        DESCRIPTION. The default is (6, 6).
+        Size of the figure. The default is (6, 6).
 
     Returns
     -------
-    fig : TYPE
-        DESCRIPTION.
-
+    fig : plt.Figure
+        Matplotlib figure.
     '''
     
     N = int( np.sqrt(dset.shape[-1]) )
@@ -363,7 +403,42 @@ def ShowDataset(dset: np.ndarray, cmap: str = 'hot', pxsize: float = None, norma
     return fig
 
 
-def PlotShiftVectors(shift_vectors, pxsize = 1, labels = True, color = None, cmap = 'summer_r', fig = None, ax = None):
+def PlotShiftVectors(shift_vectors: np.ndarray, pxsize: float = 1, labels: bool = True, color: np.ndarray = None, cmap: str = 'summer_r', fig: plt.Figure = None,
+                     ax: plt.axis = None):
+    """
+    It plots the shift vectors in a scatter plot.
+    It returns the corresponding figure and axis.
+
+    Parameters
+    ----------
+    shift_vectors : np.ndarray
+        Array of the coordinates of the shift vectors (Nch x 2).
+    pxsize : float, optional
+        Pixel size in micrometers (um). The default is 1.
+    labels : bool, optional
+        If true, the channel number is printed close to each point.
+        The default is True.
+    color : np.ndarray, optional
+        Array defining the color value (Nch).
+        The default is None.
+    cmap : str, optional
+        Colormap, to be chosen within the matplotlib list.
+        The default is 'summer_r'.
+    fig : plt.Figure, optional
+        Figure where to display the plot. If None, a new figure is created.
+        The default is None.
+    ax : plt.axis, optional
+        Axis where to display the plot. If None, a new axis is created.
+        The default is None.
+
+    Returns
+    -------
+    fig : plt.Figure
+        Matplotlib figure.
+    ax : plt.axis
+        Matplotlib axis.
+
+    """
     
     if fig == None or ax == None:
         fig, ax = plt.subplots()
@@ -389,5 +464,7 @@ def PlotShiftVectors(shift_vectors, pxsize = 1, labels = True, color = None, cma
     ax.set_xlabel(r'Shift$_x$ (nm)')
     ax.set_ylabel(r'Shift$_y$ (nm)')
     ax.set_title('Shift vectors')
-    
+
+    ax.set_aspect('equal')
+
     return fig, ax
