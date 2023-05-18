@@ -4,6 +4,7 @@ from matplotlib.widgets import RectangleSelector
 import scipy.optimize as opt
 from sklearn.metrics import r2_score
 
+from tqdm import trange
 import multiprocessing
 from joblib import Parallel, delayed
 
@@ -256,7 +257,7 @@ def pixel_fit_1(F, sigma_A, sigma_B, threshold = 0):
 
 #%%
 
-def focusISM(img, sigma_B_bound = None, threshold = 0, apr = True, calibration = 'manual', sum_results = True):
+def focusISM(img, sigma_B_bound = None, threshold = 0, apr = True, calibration = 'manual', sum_results = True, parallelize = True):
     """
     Focus-ISM algorithm to remove out-of-focus background
 
@@ -280,6 +281,10 @@ def focusISM(img, sigma_B_bound = None, threshold = 0, apr = True, calibration =
         calibration dataset is used to calculate the in-focus fingerprint
     sum_results : bool
         If true, the results are summed along the Nch dimension
+    parallelize : bool
+        If True, the algorithm is CPU-parallelized using the 'threading' backend.
+        If False, a progress bar is displayed.
+        Default is True.
 
     Returns
     -------
@@ -334,7 +339,13 @@ def focusISM(img, sigma_B_bound = None, threshold = 0, apr = True, calibration =
         
     threshold = threshold
 
-    Result = Parallel(n_jobs = N)( delayed(pixel_fit_2)( img_reshaped[i,:], sigma_A, sigma_B_bound = sigma_B_bound, threshold = threshold) for i in range(sz[0]*sz[1]) )
+    if parallelize == True:
+        Result = Parallel(n_jobs = N, backend = 'threading')( delayed(pixel_fit_2)( img_reshaped[i,:], sigma_A, sigma_B_bound = sigma_B_bound, threshold = threshold) for i in range(sz[0]*sz[1]) )
+    else:
+        Result =[[]] * (sz[0] * sz[1])
+        print('Focus-ISM:')
+        for i in trange(sz[0] * sz[1]):
+            Result[i] = pixel_fit_2(img_reshaped[i, :], sigma_A, sigma_B_bound = sigma_B_bound, threshold = threshold)
 
     # Reshape
     
