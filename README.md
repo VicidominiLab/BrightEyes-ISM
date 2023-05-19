@@ -64,7 +64,7 @@ https://brighteyes-ism.readthedocs.io
 
 ## Citation
 
-If you find BrightEyes-ISM useful for your research, plese cite it as:
+If you find BrightEyes-ISM useful for your research, please cite it as:
 
 _Zunino, A., Slenders, E., Fersini, F. et al. Open-source tools enable accessible and advanced image scanning microscopy data analysis. Nat. Photon. (2023). https://doi.org/10.1038/s41566-023-01216-x_
 
