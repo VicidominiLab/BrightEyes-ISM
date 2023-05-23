@@ -2,7 +2,8 @@ import numpy as np
 
 from .FRC_lib import radial_profile
 
-#%%
+
+# %%
 
 def Reorder(data, inOrder: str, outOrder: str = 'rzxytc'):
     '''
@@ -25,15 +26,15 @@ def Reorder(data, inOrder: str, outOrder: str = 'rzxytc'):
         ISM dataset reordered.
 
     '''
-    
-    if not(inOrder == outOrder):
+
+    if not (inOrder == outOrder):
         # adds missing dimensions
         Nout = len(outOrder)
         dataShape = np.shape(data)
         Ndim = len(dataShape)
-        for i in range(Nout-Ndim):
-            data = np.expand_dims(data, Ndim+i)
-        
+        for i in range(Nout - Ndim):
+            data = np.expand_dims(data, Ndim + i)
+
         # check order of dimensions
         order = []
         newdim = 0
@@ -42,13 +43,14 @@ def Reorder(data, inOrder: str, outOrder: str = 'rzxytc'):
             if dim in inOrder:
                 order.append(inOrder.find(dim))
             else:
-                order.append(Ndim+newdim)
+                order.append(Ndim + newdim)
                 newdim += 1
         data = np.transpose(data, order)
-    
+
     return data
 
-def CropEdge(dset, npx = 10, edges = 'l', order: str = 'rzxytc'):
+
+def CropEdge(dset, npx=10, edges='l', order: str = 'rzxytc'):
     '''
     It crops an ISM dataset along the specified edges of the xy plane.
     
@@ -70,22 +72,23 @@ def CropEdge(dset, npx = 10, edges = 'l', order: str = 'rzxytc'):
         ISM dataset cropped
 
     '''
-    
+
     dset_cropped = Reorder(dset, order)
-    
+
     if 'l' in edges:
         dset_cropped = dset_cropped[..., npx:, :, :, :]
-        
+
     if 'r' in edges:
         dset_cropped = dset_cropped[..., :-npx, :, :, :]
-        
+
     if 'u' in edges:
         dset_cropped = dset_cropped[..., :, npx:, :, :]
-        
+
     if 'd' in edges:
         dset_cropped = dset_cropped[..., :, :-npx, :, :]
-        
+
     return np.squeeze(dset_cropped)
+
 
 def DownSample(dset, ds: int = 2, order: str = 'rzxytc'):
     '''
@@ -106,12 +109,13 @@ def DownSample(dset, ds: int = 2, order: str = 'rzxytc'):
         ISM dataset downsampled.
 
     '''
-    
+
     dset = Reorder(dset, order)
-    
+
     dset_ds = dset[..., ::ds, ::ds, :, :]
-    
+
     return np.squeeze(dset_ds)
+
 
 def UpSample(dset, us: int = 2, npx: str = 'even', order: str = 'rzxytc'):
     '''
@@ -134,24 +138,25 @@ def UpSample(dset, us: int = 2, npx: str = 'even', order: str = 'rzxytc'):
         ISM dataset upsampled.
 
     '''
-    
+
     dset = Reorder(dset, order)
-    
+
     sz = dset.shape
-    
+
     if npx == 'even':
         sz_us = np.asarray(sz)
-        sz_us[2] = sz_us[2]*us
-        sz_us[3] = sz_us[3]*us
+        sz_us[2] = sz_us[2] * us
+        sz_us[3] = sz_us[3] * us
     elif npx == 'odd':
         sz_us = np.asarray(sz)
-        sz_us[2] = sz_us[2]*us - 1
-        sz_us[3] = sz_us[3]*us - 1
-        
-    dset_us = np.zeros( sz_us )
+        sz_us[2] = sz_us[2] * us - 1
+        sz_us[3] = sz_us[3] * us - 1
+
+    dset_us = np.zeros(sz_us)
     dset_us[..., ::us, ::us, :, :] = dset
-    
+
     return np.squeeze(dset_us)
+
 
 def ArgMaxND(data):
     '''
@@ -170,14 +175,15 @@ def ArgMaxND(data):
         maximum value.
 
     '''
-    
+
     idx = np.argmax(data)
 
     mx = np.array(data).ravel()[idx]
 
     arg = np.unravel_index(idx, np.array(data).shape)
-    
+
     return arg, mx
+
 
 def FWHM(x, y):
     '''
@@ -196,7 +202,7 @@ def FWHM(x, y):
         Full Width at Half Maximum of the y curve.
 
     '''
-    
+
     height = 0.5
     height_half_max = np.max(y) * height
     index_max = np.argmax(y)
@@ -204,6 +210,7 @@ def FWHM(x, y):
     x_high = np.interp(height_half_max, np.flip(y[index_max:]), np.flip(x[index_max:]))
 
     return x_high - x_low
+
 
 def RadialSpectrum(img, pxsize: float = 1, normalize: bool = True):
     '''
@@ -226,27 +233,28 @@ def RadialSpectrum(img, pxsize: float = 1, normalize: bool = True):
         Frequency axis.
 
     '''
-    
-    fft_img = np.fft.fftn(img, axes = [0, 1])
-    fft_img = np.abs( np.fft.fftshift( fft_img, axes = [0, 1]) )    
-    
+
+    fft_img = np.fft.fftn(img, axes=[0, 1])
+    fft_img = np.abs(np.fft.fftshift(fft_img, axes=[0, 1]))
+
     sx, sy = fft_img.shape
-    c = (sx//2, sy//2)
-    
+    c = (sx // 2, sy // 2)
+
     space_f = np.fft.fftfreq(sx, pxsize)[:c[0]]
-    
+
     ftR = radial_profile(fft_img, c)
-    
+
     ftR = ftR[0][:c[0]] / ftR[1][:c[0]]
-    
+
     ftR = np.real(ftR)
-    
+
     if normalize == True:
-        ftR /= np.max( ftR )
-    
+        ftR /= np.max(ftR)
+
     return ftR, space_f
 
-#%%
+
+# %%
 
 import matplotlib.pyplot as plt
 
@@ -256,7 +264,9 @@ from matplotlib.colors import Normalize
 
 import numbers
 
-def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str, vmin: float = None, vmax: float = None, fig: plt.Figure = None, ax: plt.axis = None, cmap: str = 'hot'):
+
+def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str, vmin: float = None, vmax: float = None,
+            fig: plt.Figure = None, ax: plt.axis = None, cmap: str = 'hot'):
     """
     It shows the input image with a scalebar and a colorbar.
     It returns the corresponding figure and axis.
@@ -295,32 +305,32 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str, vmin: float = None,
         Matplotlib axis.
 
     """
-    
+
     if fig == None or ax == None:
         fig, ax = plt.subplots()
-    
-    im = ax.imshow( image, vmin = vmin, vmax = vmax, cmap = cmap )
+
+    im = ax.imshow(image, vmin=vmin, vmax=vmax, cmap=cmap)
     ax.axis('off')
-    
+
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
-    cbar = fig.colorbar(im, cax=cax, ticks = [])# np.floor( [np.min(image), np.max(image)] ), )
+    cbar = fig.colorbar(im, cax=cax, ticks=[])  # np.floor( [np.min(image), np.max(image)] ), )
     # ax.text(1.0,0.4, clabel, rotation=90, transform=ax.transAxes)
 
     cbar.ax.set_ylabel(clabel, labelpad=-11, rotation=90)
-    
-    cbar.ax.text(1.02, 0.9, f'{ int(np.floor(np.max(image))) }', rotation=90, transform=ax.transAxes)
-    
-    cbar.ax.text(1.02, 0.02, f'{ int(np.floor(np.min(image))) }', rotation=90, transform=ax.transAxes, color = 'white')
-    
+
+    cbar.ax.text(1.02, 0.9, f'{int(np.floor(np.max(image)))}', rotation=90, transform=ax.transAxes)
+
+    cbar.ax.text(1.02, 0.02, f'{int(np.floor(np.min(image)))}', rotation=90, transform=ax.transAxes, color='white')
+
     scalebar = ScaleBar(
-    pxsize_x, "um", # default, extent is calibrated in meters
-    box_alpha=0,
-    color='w',
-    length_fraction=0.25)
-    
+        pxsize_x, "um",  # default, extent is calibrated in meters
+        box_alpha=0,
+        color='w',
+        length_fraction=0.25)
+
     ax.add_artist(scalebar)
-    
+
     return fig, ax
 
 
@@ -357,54 +367,54 @@ def ShowDataset(dset: np.ndarray, cmap: str = 'hot', pxsize: float = None, norma
     fig : plt.Figure
         Matplotlib figure.
     '''
-    
-    N = int( np.sqrt(dset.shape[-1]) )
-    
+
+    N = int(np.sqrt(dset.shape[-1]))
+
     if normalize == True:
         vmin = np.min(dset)
         vmax = np.max(dset)
-        norm = Normalize(vmin = vmin, vmax = vmax)
+        norm = Normalize(vmin=vmin, vmax=vmax)
 
     fig, ax = plt.subplots(N, N, sharex=True, sharey=True, figsize=figsize)
-    for i in range(N*N):
-        idx = np.unravel_index(i, [N,N])
+    for i in range(N * N):
+        idx = np.unravel_index(i, [N, N])
         if normalize == True:
-            im = ax[idx].imshow(dset[:,:,i], norm = norm, cmap = cmap)
+            im = ax[idx].imshow(dset[:, :, i], norm=norm, cmap=cmap)
         else:
             im = ax[idx].imshow(dset[:, :, i], cmap=cmap)
         ax[idx].set_xlim(xlims)
         ax[idx].set_ylim(ylims)
         ax[idx].axis('off')
-    
+
     if isinstance(pxsize, numbers.Number):
         scalebar = ScaleBar(
-        pxsize, "um", # default, extent is calibrated in meters
-        box_alpha=0,
-        color='w',
-        location = 'lower right',
-        length_fraction=0.5)
-        
-        ax[-1,-1].add_artist(scalebar)
-    
+            pxsize, "um",  # default, extent is calibrated in meters
+            box_alpha=0,
+            color='w',
+            location='lower right',
+            length_fraction=0.5)
+
+        ax[-1, -1].add_artist(scalebar)
+
     fig.tight_layout()
     if colorbar == True and normalize == True:
-        y0 = ax[-1,-1].get_position().y0
-        y1 = ax[0,0].get_position().y1
+        y0 = ax[-1, -1].get_position().y0
+        y1 = ax[0, 0].get_position().y1
         height = y1 - y0
-        
+
         fig.subplots_adjust(right=0.92)
         cbar_ax = fig.add_axes([0.94, y0, 0.05, height])
-        cbar = fig.colorbar(im, cax=cbar_ax, ticks = [])
-        
-        cbar.ax.text(0.3, 0.95, f'{ int(np.floor(vmax)) }', rotation=90, transform=cbar_ax.transAxes)
-        
-        cbar.ax.text(0.3, 0.02, f'{ int(np.floor(vmin)) }', rotation=90, transform=cbar_ax.transAxes, color = 'white')
-        
+        cbar = fig.colorbar(im, cax=cbar_ax, ticks=[])
+
+        cbar.ax.text(0.3, 0.95, f'{int(np.floor(vmax))}', rotation=90, transform=cbar_ax.transAxes)
+
+        cbar.ax.text(0.3, 0.02, f'{int(np.floor(vmin))}', rotation=90, transform=cbar_ax.transAxes, color='white')
+
     return fig
 
 
-def PlotShiftVectors(shift_vectors: np.ndarray, pxsize: float = 1, labels: bool = True, color: np.ndarray = None, cmap: str = 'summer_r', fig: plt.Figure = None,
-                     ax: plt.axis = None):
+def PlotShiftVectors(shift_vectors: np.ndarray, pxsize: float = 1, labels: bool = True, color: np.ndarray = None,
+                     cmap: str = 'summer_r', fig: plt.Figure = None, ax: plt.axis = None):
     """
     It plots the shift vectors in a scatter plot.
     It returns the corresponding figure and axis.
@@ -439,32 +449,85 @@ def PlotShiftVectors(shift_vectors: np.ndarray, pxsize: float = 1, labels: bool 
         Matplotlib axis.
 
     """
-    
+
     if fig == None or ax == None:
         fig, ax = plt.subplots()
-        
+
     shift = shift_vectors * pxsize
-    
+
     Nch = shift.shape[0]
-    
+
     if color == 'auto':
-        N = int( np.sqrt( Nch ) )
-        x = np.arange(-(N//2), N//2 +1)
-        X,Y = np.meshgrid(x,x)
-        R = np.sqrt(X**2 + Y**2)
+        N = int(np.sqrt(Nch))
+        x = np.arange(-(N // 2), N // 2 + 1)
+        X, Y = np.meshgrid(x, x)
+        R = np.sqrt(X ** 2 + Y ** 2)
         color = R
-    
-    ax.scatter(shift[:,0], shift[:,1], s = 80, c = color, edgecolors = 'black', cmap = cmap)
+
+    ax.scatter(shift[:, 0], shift[:, 1], s=80, c=color, edgecolors='black', cmap=cmap)
     ax.set_aspect('equal', 'box')
-    
+
     if labels == True:
         for n in range(Nch):
-            ax.annotate(str(n), shift[n], xytext=(3, 3), textcoords= 'offset points')
-    
+            ax.annotate(str(n), shift[n], xytext=(3, 3), textcoords='offset points')
+
     ax.set_xlabel(r'Shift$_x$ (nm)')
     ax.set_ylabel(r'Shift$_y$ (nm)')
     ax.set_title('Shift vectors')
 
     ax.set_aspect('equal')
+
+    return fig, ax
+
+
+def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False, fig: plt.Figure = None,
+                    ax: plt.axis = None):
+    """
+    It calculates and shows the fingerprint of an ISM dataset.
+    It returns the corresponding figure and axis.
+
+    Parameters
+    ----------
+    dset : np.ndarray
+        ISM dataset (Nx x Ny x Nch).
+    cmap : str, optional
+        Colormap, to be chosen within the matplotlib list. The default is 'hot'.
+    colorbar : bool, optional
+        If true, a colorbar is shown. The default is False
+    fig : plt.Figure, optional
+        Figure where to display the plot. If None, a new figure is created.
+        The default is None.
+    ax : plt.axis, optional
+        Axis where to display the plot. If None, a new axis is created.
+        The default is None.
+
+    Returns
+    -------
+    fig : plt.Figure
+        Matplotlib figure.
+    ax : plt.axis
+        Matplotlib axis.
+    """
+
+    if fig == None or ax == None:
+        fig, ax = plt.subplots()
+
+    N = int(np.sqrt(dset.shape[-1]))
+    fingerprint = dset.sum(axis=(0, 1)).reshape(N, N)
+    im = ax.imshow(fingerprint, cmap=cmap)
+
+    fig.tight_layout()
+    if colorbar == True and normalize == True:
+        y0 = ax[-1, -1].get_position().y0
+        y1 = ax[0, 0].get_position().y1
+        height = y1 - y0
+
+        fig.subplots_adjust(right=0.92)
+        cbar_ax = fig.add_axes([0.94, y0, 0.05, height])
+        cbar = fig.colorbar(im, cax=cbar_ax, ticks=[])
+
+        cbar.ax.text(0.3, 0.95, f'{int(np.floor(vmax))}', rotation=90, transform=cbar_ax.transAxes)
+
+        cbar.ax.text(0.3, 0.02, f'{int(np.floor(vmin))}', rotation=90, transform=cbar_ax.transAxes, color='white')
 
     return fig, ax
