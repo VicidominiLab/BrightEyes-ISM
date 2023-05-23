@@ -265,7 +265,7 @@ from matplotlib.colors import Normalize
 import numbers
 
 
-def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str, vmin: float = None, vmax: float = None,
+def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float = None, vmax: float = None,
             fig: plt.Figure = None, ax: plt.axis = None, cmap: str = 'hot'):
     """
     It shows the input image with a scalebar and a colorbar.
@@ -480,7 +480,7 @@ def PlotShiftVectors(shift_vectors: np.ndarray, pxsize: float = 1, labels: bool 
     return fig, ax
 
 
-def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False, fig: plt.Figure = None,
+def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False, clabel: str = None, normalize: bool = False, fig: plt.Figure = None,
                     ax: plt.axis = None):
     """
     It calculates and shows the fingerprint of an ISM dataset.
@@ -494,6 +494,10 @@ def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False,
         Colormap, to be chosen within the matplotlib list. The default is 'hot'.
     colorbar : bool, optional
         If true, a colorbar is shown. The default is False
+    clabel : str, optional
+        Label of the colorbar. The default is None
+    normalize : bool, optional
+        If true, the fingerprint values are normalized between 0 and 1. The default is False
     fig : plt.Figure, optional
         Figure where to display the plot. If None, a new figure is created.
         The default is None.
@@ -514,20 +518,28 @@ def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False,
 
     N = int( np.sqrt(dset.shape[-1]) )
     fingerprint = dset.sum(axis=(0, 1)).reshape(N, N)
+    if normalize == True:
+        max_counts = np.max(fingerprint)
+        fingerprint = fingerprint / max_counts
     im = ax.imshow(fingerprint, cmap=cmap)
 
+    ax.axis('off')
     fig.tight_layout()
-    if colorbar == True and normalize == True:
-        y0 = ax[-1, -1].get_position().y0
-        y1 = ax[0, 0].get_position().y1
-        height = y1 - y0
 
-        fig.subplots_adjust(right=0.92)
-        cbar_ax = fig.add_axes([0.94, y0, 0.05, height])
-        cbar = fig.colorbar(im, cax=cbar_ax, ticks=[])
+    if colorbar == True:
 
-        cbar.ax.text(0.3, 0.95, f'{int(np.floor(vmax))}', rotation=90, transform=cbar_ax.transAxes)
+        vmax = int(np.floor(np.max(fingerprint)))
+        vmin = int(np.floor(np.min(fingerprint)))
 
-        cbar.ax.text(0.3, 0.02, f'{int(np.floor(vmin))}', rotation=90, transform=cbar_ax.transAxes, color='white')
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        cbar = fig.colorbar(im, cax=cax, ticks=[])
+
+        cbar.ax.text(1.04, 0.5, clabel, horizontalalignment='center', verticalalignment='center',
+                     rotation='vertical', transform=ax.transAxes)
+        cbar.ax.text(1.04, 0.98, f'{vmax}', horizontalalignment='center', verticalalignment='top',
+                     rotation='vertical', transform=ax.transAxes)
+        cbar.ax.text(1.04, 0.02, f'{vmin}', horizontalalignment='center', verticalalignment='bottom',
+                     rotation='vertical', transform=ax.transAxes, color='white')
 
     return fig, ax
