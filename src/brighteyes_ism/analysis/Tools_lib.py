@@ -512,7 +512,7 @@ def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False,
     if fig == None or ax == None:
         fig, ax = plt.subplots()
 
-    N = int(np.sqrt(dset.shape[-1]))
+    N = int( np.sqrt(dset.shape[-1]) )
     fingerprint = dset.sum(axis=(0, 1)).reshape(N, N)
     im = ax.imshow(fingerprint, cmap=cmap)
 
