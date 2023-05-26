@@ -467,7 +467,7 @@ def PlotShiftVectors(shift_vectors: np.ndarray, pxsize: float = 1, labels: bool 
 
     Nch = shift.shape[0]
 
-    if color == 'auto':
+    if isinstance(color, str) and color == 'auto':
         N = int(np.sqrt(Nch))
         x = np.arange(-(N // 2), N // 2 + 1)
         X, Y = np.meshgrid(x, x)
