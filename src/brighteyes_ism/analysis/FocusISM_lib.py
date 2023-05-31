@@ -340,7 +340,8 @@ def focusISM(img, sigma_B_bound = None, threshold = 0, apr = True, calibration =
     threshold = threshold
 
     if parallelize == True:
-        Result = Parallel(n_jobs = N, backend = 'threading')( delayed(pixel_fit_2)( img_reshaped[i,:], sigma_A, sigma_B_bound = sigma_B_bound, threshold = threshold) for i in range(sz[0]*sz[1]) )
+        print('Focus-ISM - parallel:')
+        Result = Parallel(n_jobs = N, backend = 'threading')( delayed(pixel_fit_2)( img_reshaped[i,:], sigma_A, sigma_B_bound = sigma_B_bound, threshold = threshold) for i in trange(sz[0]*sz[1]) )
     else:
         Result =[[]] * (sz[0] * sz[1])
         print('Focus-ISM:')
