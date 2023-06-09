@@ -66,6 +66,65 @@ def Zernike(index, A, h, rho, phi, normalize = True):
 
 #%% functions
 
+class GridParameters:
+    """
+    It calculates a z-stack of PSFs for all the elements of the SPAD array detector.
+
+    Attributes
+    ----------
+    N : int
+        Number of detector elements in the array in each dimension (typically 5)
+    Nx : int
+        Number of pixels in each dimension in the simulation array (e.g. 1024)
+    pxpitch : float
+        Pixel pitch of the detector [nm] (real space, typically 75000)
+    pxdim : float
+        Detector element size [nm] (real space, typically 50000)
+    pxsizex : float
+        Pixel size of the simulation space [nm] (typically 1)
+    M : float
+        Total magnification of the optical system (typically 500)
+    Nz : int
+        number of axial planes (typically an odd integer)
+    """
+
+    __slots__ = ['pxsizex', 'pxsizez', 'Nx', 'Ny', 'Nz', 'pxpitch', 'pxdim', 'N', 'M']
+    def __init__(self, pxsizex=40, pxsizez=50, Nx = 100, Ny = 100, Nz = 1, pxpitch = 75e3, pxdim = 50e3, N = 5, M = 450):
+        self.pxsizex = pxsizex  # nm - lateral pixel size of the images
+        self.pxsizez = pxsizez  # nm - distance of the axial planes
+        self.Nx = Nx  # number of samples along the X axis
+        self.Ny = Ny  # number of samples along the Y axis
+        self.Nz = Nz  # number of axial planes
+        self.pxpitch = pxpitch  # nm - spad array pixel pitch (real space)
+        self.pxdim = pxdim  # nm - spad pixel size (real space) 57.3e-3 for cooled spad
+        self.N = N  # number of pixels in the detector in each dimension (5x5 typically)
+        self.M = M  # overall magnification of the system
+
+    @property
+    def rangex(self):
+        return self.Nx * self.pxsizex
+
+    @property
+    def rangey(self):
+        return self.Ny * self.pxsizex
+
+    @property
+    def rangez(self):
+        return self.Nz * self.pxsizez
+
+    @property
+    def Nch(self):
+        return self.N**2
+
+    def spad_size(self, mode: str = 'magnified', simPar = None):
+        size = (self.pxpitch * (self.N - 1) + self.pxdim)
+        if simPar is not None:
+            return size / self.M / simPar.airy_unit
+        elif mode == 'magnified':
+            return size / self.M
+        elif mode == 'real':
+            return size
+
 class simSettings:
     """
     Optical settings used to calculate the psf 
@@ -125,32 +184,32 @@ class simSettings:
     __slots__ = ['na', 'n', 'wl', 'h', 'gamma', 'beta', 'w0', 'I0', 'field', 'mask', 'mask_sampl',
                  'sted_sat', 'sted_pulse', 'sted_tau', 'abe_index', 'abe_ampli']
 
-    def __init__(self, na=1.4, n = 1.5, wl = 485.0, h = 2.8, gamma = 45.0, beta = 90.0,
-                 w0 = 100.0, I0 = 1, field = 'PlaneWave', mask = None,  mask_sampl = 200,
-                 sted_sat = 50, sted_pulse = 1, sted_tau = 3.5,
-                 abe_index = None, abe_ampli = None):
-        
-        self.na = na            # numerical aperture
-        self.n = n              # sample refractive index
-        self.wl = wl            # wavelength [nm]
-        self.h = h              # radius of aperture of the objective lens [mm]
-        self.w0 = w0            # radius of the incident gaussian beam [mm]
-        self.gamma = gamma      # parameter describing the light polarization (amplitude)
-        self.beta = beta        # parameter describing the light polarization (phase)
-        self.I0 = I0            # Intensity of the entrance field
-        self.field = field      # entrance field at the pupil plane
-                                #   'PlaneWave' = Flat field
-                                #   'Gaussian' = Gaussian beam with waist w0
-        self.mask = mask        # phase mask 
-                                #   None = no mask
-                                #   'VP' = vortex phase plate
-                                #   'Zernike' = zernike polynomials
-        self.mask_sampl = mask_sampl   # phase mask sampling
-        self.sted_sat = sted_sat   # STED maximum saturation factor
-        self.sted_pulse = sted_pulse   # STED pulse duration [ns]
-        self.sted_tau = sted_tau   # fluorescence lifetime [ns]
-        self.abe_index = abe_index      # aberration index (int or array)
-        self.abe_ampli = abe_ampli      # aberration amplitude in rad (float or array)
+    def __init__(self, na=1.4, n=1.5, wl=485.0, h=2.8, gamma=45.0, beta=90.0,
+                 w0=100.0, I0=1, field='PlaneWave', mask=None, mask_sampl=200,
+                 sted_sat=50, sted_pulse=1, sted_tau=3.5,
+                 abe_index=None, abe_ampli=None):
+
+        self.na = na  # numerical aperture
+        self.n = n  # sample refractive index
+        self.wl = wl  # wavelength [nm]
+        self.h = h  # radius of aperture of the objective lens [mm]
+        self.w0 = w0  # radius of the incident gaussian beam [mm]
+        self.gamma = gamma  # parameter describing the light polarization (amplitude)
+        self.beta = beta  # parameter describing the light polarization (phase)
+        self.I0 = I0  # Intensity of the entrance field
+        self.field = field  # entrance field at the pupil plane
+        #   'PlaneWave' = Flat field
+        #   'Gaussian' = Gaussian beam with waist w0
+        self.mask = mask  # phase mask
+        #   None = no mask
+        #   'VP' = vortex phase plate
+        #   'Zernike' = zernike polynomials
+        self.mask_sampl = mask_sampl  # phase mask sampling
+        self.sted_sat = sted_sat  # STED maximum saturation factor
+        self.sted_pulse = sted_pulse  # STED pulse duration [ns]
+        self.sted_tau = sted_tau  # fluorescence lifetime [ns]
+        self.abe_index = abe_index  # aberration index (int or array)
+        self.abe_ampli = abe_ampli  # aberration amplitude in rad (float or array)
         
     @property
     def f(self):    # focal length of the objective lens [mm]
@@ -158,7 +217,17 @@ class simSettings:
 
     @property
     def alpha(self):    # semiangular aperture of the objective [rad]
-        return np.arcsin(self.na/self.n)   
+        return np.arcsin(self.na/self.n)
+
+    @property
+    def airy_unit(self):
+        au = 1.22 * self.wl / self.na
+        return au
+
+    @property
+    def depth_of_field(self):
+        dof = 2 * self.n * self.wl / (self.na ** 2)
+        return dof
 
     @property
     def aberration(self):
@@ -309,7 +378,7 @@ def PSFs2D(exPar, emPar, pxsizex, Nx, z_shift = 0, return_entrance_field = False
     
         return ex_PSF, em_PSF
 
-def Pinholes(N, Nx, pxsizex, M, pxpitch, pxdim):
+def Pinholes(gridPar):
     """
     Simulate PSFs with PyFocus
 
@@ -335,18 +404,18 @@ def Pinholes(N, Nx, pxsizex, M, pxpitch, pxdim):
     
     """
     
-    p = np.zeros((Nx, Nx, N*N))
-    center = Nx//2
-    sizeDet = int( np.round(pxdim / M / pxsizex) )
+    p = np.zeros((gridPar.Nx, gridPar.Nx, gridPar.N**2))
+    center = gridPar.Nx//2
+    sizeDet = int( np.round(gridPar.pxdim / gridPar.M / gridPar.pxsizex) )
     if np.mod(sizeDet, 2) == 0:
         sizeDet -= 1 # let this be odd
     sizeDet = np.max((sizeDet, 1))
-    stepDet = int( np.round(pxpitch / M / pxsizex) )
-    startcoord = int(np.ceil(center - np.floor(N/2) * stepDet - 0.5 * sizeDet))
+    stepDet = int( np.round(gridPar.pxpitch / gridPar.M / gridPar.pxsizex) )
+    startcoord = int(np.ceil(center - np.floor(gridPar.N/2) * stepDet - 0.5 * sizeDet))
 
     i = 0
-    for dy in range(N):
-        for dx in range(N):
+    for dy in range(gridPar.N):
+        for dx in range(gridPar.N):
             ymin = np.max((startcoord+dy*stepDet, 0))
             ymax = np.max((startcoord+dy*stepDet+sizeDet, 0))
             xmin = np.max((startcoord+dx*stepDet, 0))
@@ -356,7 +425,7 @@ def Pinholes(N, Nx, pxsizex, M, pxpitch, pxdim):
 
     return p
 
-def SPAD_PSF_2D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, rotParam = None, stedPar = None, z_shift=0, spad = None, return_entrance_field = False):
+def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, stedPar = None, z_shift=0, spad = None, return_entrance_field = False):
     """
     Calculate PSFs for all pixels of the SPAD array by using FFTs
 
@@ -407,23 +476,23 @@ def SPAD_PSF_2D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, rotParam = None
     # Simulate ism psfs
     
     if return_entrance_field == True:
-        exPSF, emPSF, ex_fields, em_fields = PSFs2D(exPar, emPar, pxsizex, Nx, z_shift = z_shift, return_entrance_field = True)
+        exPSF, emPSF, ex_fields, em_fields = PSFs2D(exPar, emPar, gridPar.pxsizex, gridPar.Nx, z_shift = z_shift, return_entrance_field = True)
     else:
-        exPSF, emPSF = PSFs2D(exPar, emPar, pxsizex, Nx, z_shift = z_shift)
+        exPSF, emPSF = PSFs2D(exPar, emPar, gridPar.pxsizex, gridPar.Nx, z_shift = z_shift)
     
     if spad is None:
-        spad = Pinholes(N, Nx, pxsizex, M, pxpitch, pxdim)
+        spad = Pinholes(gridPar)
     
-    detPSF = np.empty( (Nx, Nx, N*N) )
+    detPSF = np.empty( (gridPar.Nx, gridPar.Nx, gridPar.N**2) )
 
-    for i in range(N*N):
+    for i in range(gridPar.N**2):
         detPSF[:,:,i] = sgn.convolve( emPSF, spad[:,:,i], mode ='same' )
 
     # Simulate donut
     
     if type(stedPar) == simSettings:
         stedPar.mask = 'VP'
-        donut = singlePSF(stedPar, pxsizex, Nx, z_shift = z_shift)
+        donut = singlePSF(stedPar, gridPar.pxsizex, gridPar.Nx, z_shift = z_shift)
         donut *= stedPar.sted_sat/np.max(donut)
         stedPSF = np.exp( - donut * stedPar.sted_pulse / stedPar.sted_tau )
         exPSF *= stedPSF
@@ -439,9 +508,9 @@ def SPAD_PSF_2D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, rotParam = None
         mirror = rotParam[2]
 
         if mirror == -1:
-            detPSFrot = detPSFrot.reshape(Nx, Nx, N, N)
+            detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, gridPar.N, gridPar.N)
             detPSFrot = np.flip(detPSFrot, axis=-1)
-            detPSFrot = detPSFrot.reshape(Nx, Nx, N ** 2)
+            detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, gridPar.N ** 2)
 
         detPSFrot = rotate(detPSFrot, theta, resize=False, center=None, order=None, mode='constant', cval=0,
                            clip=True, preserve_range=False)
@@ -455,7 +524,7 @@ def SPAD_PSF_2D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, rotParam = None
     else:
         return PSF, detPSFrot, exPSF
     
-def SPAD_PSF_3D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, Nz, pxsizez, rotParam = None, stedPar = None, spad = None, stack: str = 'symmetrical'):
+def SPAD_PSF_3D(gridPar, exPar, emPar, rotParam = None, stedPar = None, spad = None, stack: str = 'symmetrical'):
     """
     It calculates a z-stack of PSFs for all the elements of the SPAD array detector.
 
@@ -506,22 +575,22 @@ def SPAD_PSF_3D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, Nz, pxsizez, ro
     """
 
     if stack == "symmetrical":
-        zeta = (np.arange(Nz) - Nz//2) * pxsizez
+        zeta = (np.arange(gridPar.Nz) - gridPar.Nz//2) * gridPar.pxsizez
     elif stack == "positive":
-        zeta = np.arange(Nz) * pxsizez
+        zeta = np.arange(gridPar.Nz) * gridPar.pxsizez
     elif stack == "negative":
-        zeta = -np.arange(Nz) * pxsizez
+        zeta = -np.arange(gridPar.Nz) * gridPar.pxsizez
 
     if spad is None:
-        spad = Pinholes(N, Nx, pxsizex, M, pxpitch, pxdim)
+        spad = Pinholes(gridPar)
     
-    PSF = np.empty( (Nz, Nx, Nx, N*N) )
-    detPSF = np.empty( (Nz, Nx, Nx, N*N) )
-    exPSF = np.empty( (Nz, Nx, Nx) )
+    PSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, gridPar.N**2) )
+    detPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, gridPar.N**2) )
+    exPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx) )
     
     for i, z in enumerate(zeta):
         print( f'Calculating the PSFs at z = {z} nm')
-        PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(N, Nx, pxpitch, pxdim, pxsizex, M, exPar, emPar, rotParam = rotParam, stedPar = stedPar, z_shift = z, spad = spad)
+        PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = rotParam, stedPar = stedPar, z_shift = z, spad = spad)
         
     return PSF, detPSF, exPSF
 
