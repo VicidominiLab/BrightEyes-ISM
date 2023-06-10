@@ -574,7 +574,7 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, rotParam = None, stedPar = None, spad = N
         Other possible entries are "positive", and "negative".
         Default: "symmetrical".
     normalize : bool
-        If True, for each z the returned PSFs are divided by the total flux calculated on the XY plane.
+        If True, the returned PSFs are divided by the total flux calculated on the focal plane (z=0).
         Default is True.
     Returns
     -------
@@ -605,8 +605,14 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, rotParam = None, stedPar = None, spad = N
         print( f'Calculating the PSFs at z = {z} nm')
         PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = rotParam,
                                                                           stedPar = stedPar, z_shift = z, spad = spad,
-                                                                          normalize = normalize)
-        
+                                                                          normalize = False)
+
+    if normalize == True:
+        idx = np.argwhere(zeta == 0).item()
+        focal_flux = PSF[idx, :, :, :].sum()
+        for i, z in enumerate(zeta):
+            PSF[i, :, :, :] /= focal_flux
+
     return PSF, detPSF, exPSF
 
 def Fingerprint(dset, volumetric = False):
