@@ -425,7 +425,8 @@ def Pinholes(gridPar):
 
     return p
 
-def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, stedPar = None, z_shift=0, spad = None, return_entrance_field = False):
+def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, stedPar = None, z_shift=0, spad = None,
+                return_entrance_field = False, normalize = True):
     """
     Calculate PSFs for all pixels of the SPAD array by using FFTs
 
@@ -461,6 +462,9 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, stedPar = None, z_shift=
         pupil plane in polar coordinates. They have to be
         converted into cartesian coordinate using the
         plot_in_cartesian function
+    normalize : bool
+        If True, all the returned PSFs are divided by the total flux.
+        Default is True.
     
     Returns
     -------
@@ -518,13 +522,19 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, stedPar = None, z_shift=
     # Calculate total PSF
     
     PSF = np.einsum('ijk, ij -> ijk', detPSFrot, exPSF)
-    
+
+    if normalize == True:
+        PSF /= PSF.sum()
+        detPSFrot /= detPSFrot.sum()
+        exPSF /= exPSF.sum()
+
     if return_entrance_field == True:
         return PSF, detPSFrot, exPSF, ex_fields, em_fields
     else:
         return PSF, detPSFrot, exPSF
     
-def SPAD_PSF_3D(gridPar, exPar, emPar, rotParam = None, stedPar = None, spad = None, stack: str = 'symmetrical'):
+def SPAD_PSF_3D(gridPar, exPar, emPar, rotParam = None, stedPar = None, spad = None, stack: str = 'symmetrical',
+                normalize = True):
     """
     It calculates a z-stack of PSFs for all the elements of the SPAD array detector.
 
@@ -563,6 +573,9 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, rotParam = None, stedPar = None, spad = N
         If "symmetrical", the stack is generated at planes around z = 0 both on the negative and positive directions.
         Other possible entries are "positive", and "negative".
         Default: "symmetrical".
+    normalize : bool
+        If True, for each z the returned PSFs are divided by the total flux calculated on the XY plane.
+        Default is True.
     Returns
     -------
     PSF : np.array(Nz x Nx x Nx x N**2)
@@ -590,7 +603,9 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, rotParam = None, stedPar = None, spad = N
     
     for i, z in enumerate(zeta):
         print( f'Calculating the PSFs at z = {z} nm')
-        PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = rotParam, stedPar = stedPar, z_shift = z, spad = spad)
+        PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = rotParam,
+                                                                          stedPar = stedPar, z_shift = z, spad = spad,
+                                                                          normalize = normalize)
         
     return PSF, detPSF, exPSF
 
