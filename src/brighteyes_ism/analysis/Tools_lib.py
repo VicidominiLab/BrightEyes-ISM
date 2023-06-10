@@ -252,3 +252,37 @@ def RadialSpectrum(img, pxsize: float = 1, normalize: bool = True):
         ftR /= np.max(ftR)
 
     return ftR, space_f
+
+
+def fingerprint(dset, volumetric=False):
+    """
+    Calculate the fingerprint of an ISM dataset.
+    The last dimension has to be the spad array channel.
+
+    Parameters
+    ----------
+    dset : np.array(Nz x Nx x Nx x ... x N*N)
+        ISM dataset
+    volumetric : bool
+        if true, a fingerprint is returned for each axial plane
+
+    Returns
+    -------
+    Fingerprint : np.array(Nz x N x N)
+        Finger print
+
+    """
+
+    N = int(np.sqrt(dset.shape[-1]))
+
+    if volumetric == True:
+        Nz = dset.shape[0]
+        f = np.empty((Nz, N * N))
+        axis = tuple(range(1, dset.ndim - 1))
+        f = np.sum(dset, axis=axis)
+        f = f.reshape(Nz, N, N)
+    else:
+        axis = tuple(range(dset.ndim - 1))
+        f = np.sum(dset, axis=axis)
+        f = f.reshape(N, N)
+    return f

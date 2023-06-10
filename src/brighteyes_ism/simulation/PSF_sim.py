@@ -614,36 +614,3 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, rotParam = None, stedPar = None, spad = N
             PSF[i, :, :, :] /= focal_flux
 
     return PSF, detPSF, exPSF
-
-def Fingerprint(dset, volumetric = False):
-    """
-    Calculate the fingerprint of an ISM dataset.
-    The last dimension has to be the spad array channel.
-
-    Parameters
-    ----------
-    dset : np.array(Nz x Nx x Nx x ... x N*N)
-        ISM dataset
-    volumetric : bool
-        if true, a fingerprint is returned for each axial plane
-    
-    Returns
-    -------
-    Fingerprint : np.array(Nz x N x N)
-        Finger print
-    
-    """
-    
-    N = int( np.sqrt(dset.shape[-1]) )
-    
-    if volumetric == True:
-        Nz = dset.shape[0]
-        f = np.empty( (Nz, N*N) )
-        axis = tuple( range(1, dset.ndim - 1) )
-        f = np.sum( dset, axis = axis )
-        f = f.reshape(Nz, N, N)
-    else:
-        axis = tuple( range(dset.ndim - 1) )
-        f = np.sum( dset, axis = axis )
-        f = f.reshape(N,N)
-    return f
