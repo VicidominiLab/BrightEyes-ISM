@@ -249,16 +249,13 @@ def Reassignment(shift_vec: np.ndarray, dset: np.ndarray, mode: str = 'fourier')
     
     sz = dset.shape    
     result_ism_pc = np.empty( sz )
-    
-    if mode == 'fourier':
-    
-        for i in range( sz[-1] ):
-            offset  = fourier_shift(np.fft.fftn(dset[:,:,i]), (shift_vec[i,:]))
-            result_ism_pc[:,:,i]  = np.real( np.fft.ifftn(offset) )
-        return result_ism_pc
-        
-    elif mode == 'interp':
-        
-        for i in range( sz[-1] ):
-            result_ism_pc[:,:,i]  = shift( dset[:,:,i], shift_vec[i,:] )
-        return result_ism_pc
+
+    for i in range(sz[-1]):
+        if mode == 'fourier':
+            offset = fourier_shift(np.fft.fftn(dset[:, :, i]), (shift_vec[i, :]))
+            result_ism_pc[:, :, i] = np.real( np.fft.ifftn(offset) )
+        elif mode == 'interp':
+            result_ism_pc[:, :, i] = shift( dset[:, :, i], shift_vec[i,:] )
+
+    result_ism_pc[result_ism_pc < 0] = 0
+    return result_ism_pc
