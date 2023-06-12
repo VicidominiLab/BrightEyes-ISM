@@ -3,6 +3,7 @@ from scipy.linalg import toeplitz
 from scipy.linalg import inv
 from scipy.ndimage import laplace
 from scipy.signal import convolve
+from tqdm import tqdm
 
 from . import FRC_lib as FRC
 from . import APR_lib as APR
@@ -308,7 +309,7 @@ def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None,
         i = PadDataset(i, pad)
         
     N = i.shape[-1]
-    
+
     if epsilon is None:
        epsilon = np.finfo(float).eps
     
@@ -317,6 +318,8 @@ def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None,
     obj = np.ones( i.shape[0:-1] ) #Initialization
     
     k = 0
+    print('Multi-image deconvolution:')
+    pbar = tqdm(total=max_iter)
     while k < max_iter:
         
         if verbose == True:
@@ -338,6 +341,7 @@ def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None,
             obj_all[k] = obj.copy()
             
         k += 1
+        pbar.update(1)
 
     if pad is not None:
         if out == 'last':
