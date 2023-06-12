@@ -89,7 +89,7 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float 
 
 def ShowDataset(dset: np.ndarray, cmap: str = 'hot', pxsize: float = None, normalize: bool = False,
                 colorbar: bool = False, xlims: list = [None, None], ylims: list = [None, None],
-                figsize: tuple = (6, 6)) -> plt.Figure:
+                extent = None, figsize: tuple = (6, 6)) -> plt.Figure:
     '''
     It displays all the images of the ISM dataset in a squared grid.
     It returns the corresponding figure.
@@ -132,9 +132,9 @@ def ShowDataset(dset: np.ndarray, cmap: str = 'hot', pxsize: float = None, norma
     for i in range(N * N):
         idx = np.unravel_index(i, [N, N])
         if normalize == True:
-            im = ax[idx].imshow(dset[:, :, i], norm=norm, cmap=cmap)
+            im = ax[idx].imshow(dset[:, :, i], norm=norm, cmap=cmap, extent=extent)
         else:
-            im = ax[idx].imshow(dset[:, :, i], cmap=cmap)
+            im = ax[idx].imshow(dset[:, :, i], cmap=cmap, extent=extent)
         ax[idx].set_xlim(xlims)
         ax[idx].set_ylim(ylims)
         ax[idx].axis('off')
