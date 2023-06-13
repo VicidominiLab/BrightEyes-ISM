@@ -92,8 +92,7 @@ class GridParameters:
     def __init__(self, pxsizex=40, pxsizez=50, Nx = 100, Ny = 100, Nz = 1, pxpitch = 75e3, pxdim = 50e3, N = 5, M = 450):
         self.pxsizex = pxsizex  # nm - lateral pixel size of the images
         self.pxsizez = pxsizez  # nm - distance of the axial planes
-        self.Nx = Nx  # number of samples along the X axis
-        self.Ny = Ny  # number of samples along the Y axis
+        self.Nx = Nx  # number of samples along the X and Y axis
         self.Nz = Nz  # number of axial planes
         self.pxpitch = pxpitch  # nm - spad array pixel pitch (real space)
         self.pxdim = pxdim  # nm - spad pixel size (real space) 57.3e-3 for cooled spad
@@ -103,10 +102,6 @@ class GridParameters:
     @property
     def rangex(self):
         return self.Nx * self.pxsizex
-
-    @property
-    def rangey(self):
-        return self.Ny * self.pxsizex
 
     @property
     def rangez(self):
