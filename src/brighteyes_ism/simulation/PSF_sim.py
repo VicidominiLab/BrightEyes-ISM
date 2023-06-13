@@ -125,6 +125,9 @@ class GridParameters:
         elif mode == 'real':
             return size
 
+    def copy(self):
+        return cp.copy(self)
+
 class simSettings:
     """
     Optical settings used to calculate the psf 
