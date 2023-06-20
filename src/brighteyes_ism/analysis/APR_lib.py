@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.ndimage import fourier_shift, shift
 from skimage.registration import phase_cross_correlation
+from skimage.filters import gaussian
+
 
 def sigmoid(R: float, T: float, S: float):
     '''
@@ -132,7 +134,7 @@ def rotate(array: np.ndarray, degree: float):
     m = np.dot(j, ( [x, y] ) )
     return m
 
-def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool = True, cutoff: float = None, mode: str = 'fourier'):
+def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool = True, cutoff: float = None, mode: str = 'interp'):
     '''
     It performs adaptive pixel reassignment on a single-plane ISM dataset using the phase correlation method.
 
@@ -154,7 +156,7 @@ def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool =
         to calculate the shift-vectors. The default is None.
     mode : str, optional
         Registration method. It can be a fourier shift ('fourier'')
-        or an interpolation ('interp'). The default is 'fourier'.
+        or a linear interpolation ('interp'). The default is 'interp'.
 
     Returns
     -------
@@ -214,7 +216,9 @@ def ShiftVectors(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodiz
         W = hann2d(dset.shape)
         dsetW = np.einsum('ijk, ij -> ijk', dset, W)
     else:
-        dsetW = dset
+        dsetW = dset.copy()
+
+    dsetW = gaussian(dsetW, sigma=2, channel_axis = -1)
 
     # Calculate shift-vectors
 
@@ -226,7 +230,7 @@ def ShiftVectors(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodiz
     
     return shift_vec, error
 
-def Reassignment(shift_vec: np.ndarray, dset: np.ndarray, mode: str = 'fourier'):
+def Reassignment(shift_vec: np.ndarray, dset: np.ndarray, mode: str = 'interp'):
     '''
     It reassignes a single-plane ISM dataset using the provided shift-vectors.
 
@@ -238,7 +242,7 @@ def Reassignment(shift_vec: np.ndarray, dset: np.ndarray, mode: str = 'fourier')
         ISM dataset (Nx x Ny x Nch).
     mode : str, optional
         Registration method. It can be a fourier shift ('fourier'')
-        or an interpolation ('interp'). The default is 'fourier'.
+        or an interpolation ('interp'). The default is 'interp'.
 
     Returns
     -------
