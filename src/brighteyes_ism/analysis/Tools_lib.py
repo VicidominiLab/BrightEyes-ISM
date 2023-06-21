@@ -2,6 +2,82 @@ import numpy as np
 
 from .FRC_lib import radial_profile
 
+def sigmoid(R: float, T: float, S: float):
+    '''
+    It generates a circularly-symmetric sigmoid function.
+
+    Parameters
+    ----------
+    R : float
+        Radial axis.
+    T : float
+        Cut-off frequency.
+    S : float
+        Sigmoid slope.
+
+    Returns
+    -------
+    np.ndarray
+        Sigmoid array. It has the same dimensions of R.
+
+    '''
+
+    return 1 / (1 + np.exp((R - T) / S))
+
+
+def low_pass(img: np.ndarray, T: float, S: float, data: str = 'real'):
+    '''
+    It applies a low-pass sigmoidal filter to a 2D image.
+
+    Parameters
+    ----------
+    img : np.ndarray
+        2D image.
+    T : float
+        Cut-off frequency.
+    S : float
+        Sigmoid slope.
+    data : str, optional
+        Domain of the image: It can be 'real' or 'fourier'.
+        The default is 'real'.
+
+    Returns
+    -------
+    img_filt : np.ndarray
+        Filtered 2D image, in the domain specified by 'data'.
+
+    '''
+
+    if data == 'real':
+        img_fft = np.fft.fftn(img, axes=(0, 1))
+        img_fft = np.fft.fftshift(img_fft, axes=(0, 1))
+    elif data == 'fourier':
+        img_fft = img
+    else:
+        raise ValueError('data has to be \'real\' or \'fourier\'')
+
+    Nx = np.shape(img_fft)[0]
+    Ny = np.shape(img_fft)[1]
+    cx = int((Nx + np.mod(Nx, 2)) / 2)
+    cy = int((Ny + np.mod(Ny, 2)) / 2)
+
+    x = (np.arange(Nx) - cx) / Nx
+    y = (np.arange(Ny) - cy) / Ny
+
+    X, Y = np.meshgrid(x, y)
+    R = np.sqrt(X ** 2 + Y ** 2)
+
+    sig = sigmoid(R, T, S)
+
+    img_filt = np.einsum('ij..., ij -> ij...', img_fft, sig)
+
+    if data == 'real':
+        img_filt = np.fft.ifftshift(img_filt, axes=(0, 1))
+        img_filt = np.fft.ifftn(img_filt, axes=(0, 1))
+        img_filt = np.abs(img_filt)
+
+    return img_filt
+
 
 # %%
 
