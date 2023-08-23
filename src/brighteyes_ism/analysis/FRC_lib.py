@@ -3,6 +3,7 @@ from scipy import pi
 import matplotlib.pyplot as plt
 import scipy.fft as ft
 from statsmodels.nonparametric.smoothers_lowess import lowess
+from scipy.optimize import curve_fit
 
 def smooth(x,y):
     """
@@ -201,7 +202,7 @@ def nsigma_threshold(k, frc, img, sigma):
     return th_interp, idx2
 
 
-def FRC_resolution(I1, I2, px = 1, method = 'fixed'):
+def FRC_resolution(I1, I2, px = 1, method = 'fixed', smoothing = 'lowess'):
     """
     Fourier Ring Correlation analysis. It requires two identical images, differing only
     in the noise content, and estimates the resolution from the FRC curve.
@@ -214,9 +215,14 @@ def FRC_resolution(I1, I2, px = 1, method = 'fixed'):
         Second input image
     px : float
         Pixel size of the images
-    Method : str
+    method : str
         Threshold criterium. If 'fixed', it uses the 1/7 threshold.
         Other possibilities are '3sigma' and '5sigma'
+    smoothing : str
+        Smoothing method for the FRC curve. If 'lowess' it smooths and
+        interpolates the curve using a lowess algorithm. If 'fit' it fits the
+        curve with a sigmoid model and removes high-frequency offset, if present.
+        Default is 'lowess'.
 
     Returns
     -------
@@ -244,8 +250,25 @@ def FRC_resolution(I1, I2, px = 1, method = 'fixed'):
     kpx = np.linspace(0, max_kpx, F, endpoint = True)
     k = kpx / px
 
-    k_interp, frc_smooth = smooth(k, frc) # FRC smoothing
-    
+    if smoothing == 'lowess':
+
+        k_interp, frc_smooth = smooth(k, frc) # FRC smoothing
+
+    elif smoothing == 'fit':
+
+        p0 = [1, 1, 1, 0]
+
+        sigmoid_fit = lambda x, a, b, c, d: a / (1 + np.exp((x - b) / c)) + d
+
+        popt, pcov = curve_fit(sigmoid_fit, k[kpx<0.5], frc[kpx<0.5], p0)
+
+        amplitude = popt[0]
+        offset = popt[-1]
+
+        k_interp = np.linspace(0, max_kpx, F*1000, endpoint = True) / px
+        frc_smooth = (sigmoid_fit(k_interp, *popt) - offset)/ amplitude
+        frc = (frc - offset)/ amplitude
+
     if method == 'fixed':
         th, idx = fixed_threshold(frc_smooth, 1/7)
     elif method == '3sigma':
@@ -342,9 +365,9 @@ def plotFRC(res_um, k, frc, k_interp, frc_smooth, th, fig = None, ax = None):
     ax.set_xlim( ( 0, k_max ) )
     ax.set_ylim( ( -0.05, 1.05 ) )
     
-    ax.set_xlabel(r'k ($\mu m ^{-1}$)')
+    ax.set_xlabel(r'k ($\mathregular{\mu m ^{-1}}$)')
     ax.set_ylabel('FRC')
     
-    ax.set_title(f'Resolution = {res_um:.3f} $\mu m$')
+    ax.set_title(f'Resolution = {res_um:.3f}' + r' $\mathregular{\mu m}$')
     
     return fig, ax
