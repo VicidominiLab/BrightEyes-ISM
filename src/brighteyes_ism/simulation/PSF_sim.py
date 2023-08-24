@@ -88,7 +88,8 @@ class GridParameters:
         number of axial planes (typically an odd integer)
     """
 
-    __slots__ = ['pxsizex', 'pxsizez', 'Nx', 'Ny', 'Nz', 'pxpitch', 'pxdim', 'N', 'M']
+    # __slots__ = ['pxsizex', 'pxsizez', 'Nx', 'Ny', 'Nz', 'pxpitch', 'pxdim', 'N', 'M']
+    
     def __init__(self, pxsizex=40, pxsizez=50, Nx = 100, Ny = 100, Nz = 1, pxpitch = 75e3, pxdim = 50e3, N = 5, M = 450):
         self.pxsizex = pxsizex  # nm - lateral pixel size of the images
         self.pxsizez = pxsizez  # nm - distance of the axial planes
@@ -109,7 +110,13 @@ class GridParameters:
 
     @property
     def Nch(self):
-        return self.N**2
+        if np.ndim(self.N) == 0:
+            Ntot = self.N**2
+        elif np.ndim(self.N) == 1:
+            Ntot = self.N[1]*self.N[0]
+        else:
+            raise ValueError('N has to a be a single or a couple of positive integers.')
+        return Ntot
 
     def spad_size(self, mode: str = 'magnified', simPar = None):
         size = (self.pxpitch * (self.N - 1) + self.pxdim)
@@ -179,8 +186,7 @@ class simSettings:
         Returns the list of aberrations by name.
     """
     
-    __slots__ = ['na', 'n', 'wl', 'h', 'gamma', 'beta', 'w0', 'I0', 'field', 'mask', 'mask_sampl',
-                 'sted_sat', 'sted_pulse', 'sted_tau', 'abe_index', 'abe_ampli']
+    # __slots__ = ['na', 'n', 'wl', 'h', 'gamma', 'beta', 'w0', 'I0', 'field', 'mask', 'mask_sampl', 'sted_sat', 'sted_pulse', 'sted_tau', 'abe_index', 'abe_ampli']
 
     def __init__(self, na=1.4, n=1.5, wl=485.0, h=2.8, gamma=45.0, beta=90.0,
                  w0=100.0, I0=1, field='PlaneWave', mask=None, mask_sampl=200,
@@ -401,23 +407,33 @@ def Pinholes(gridPar):
         array with the pinholes of each detector element
     
     """
-    
-    p = np.zeros((gridPar.Nx, gridPar.Nx, gridPar.N**2))
+
+    if np.ndim(gridPar.N) == 0:
+        nx = gridPar.N
+        ny = gridPar.N
+    elif np.ndim(gridPar.N) == 1:
+        nx = gridPar.N[1]
+        ny = gridPar.N[0]
+    else:
+        raise ValueError('N has to a be a single or a couple of positive integers.')
+
+    p = np.zeros((gridPar.Nx, gridPar.Nx, nx*ny))
     center = gridPar.Nx//2
     sizeDet = int( np.round(gridPar.pxdim / gridPar.M / gridPar.pxsizex) )
     if np.mod(sizeDet, 2) == 0:
         sizeDet -= 1 # let this be odd
     sizeDet = np.max((sizeDet, 1))
     stepDet = int( np.round(gridPar.pxpitch / gridPar.M / gridPar.pxsizex) )
-    startcoord = int(np.ceil(center - np.floor(gridPar.N/2) * stepDet - 0.5 * sizeDet))
+    startcoord_x = int(np.ceil(center - np.floor(nx/2) * stepDet - 0.5 * sizeDet))
+    startcoord_y = int(np.ceil(center - np.floor(ny/2) * stepDet - 0.5 * sizeDet))
 
     i = 0
-    for dy in range(gridPar.N):
-        for dx in range(gridPar.N):
-            ymin = np.max((startcoord+dy*stepDet, 0))
-            ymax = np.max((startcoord+dy*stepDet+sizeDet, 0))
-            xmin = np.max((startcoord+dx*stepDet, 0))
-            xmax = np.max((startcoord+dx*stepDet+sizeDet, 0))
+    for dy in range(ny):
+        for dx in range(nx):
+            ymin = np.max((startcoord_y+dy*stepDet, 0))
+            ymax = np.max((startcoord_y+dy*stepDet+sizeDet, 0))
+            xmin = np.max((startcoord_x+dx*stepDet, 0))
+            xmax = np.max((startcoord_x+dx*stepDet+sizeDet, 0))
             p[ymin:ymax, xmin:xmax, i] = 1
             i += 1    
 
@@ -474,7 +490,7 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, stedPar = None, z_shift=
         array with the excitation PSF
     
     """
-    
+
     # Simulate ism psfs
     
     if return_entrance_field == True:
@@ -485,9 +501,9 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, stedPar = None, z_shift=
     if spad is None:
         spad = Pinholes(gridPar)
     
-    detPSF = np.empty( (gridPar.Nx, gridPar.Nx, gridPar.N**2) )
+    detPSF = np.empty( (gridPar.Nx, gridPar.Nx, gridPar.Nch) )
 
-    for i in range(gridPar.N**2):
+    for i in range(gridPar.Nch):
         detPSF[:,:,i] = sgn.convolve( emPSF, spad[:,:,i], mode ='same' )
 
     # Simulate donut
@@ -510,9 +526,16 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, stedPar = None, z_shift=
         mirror = rotParam[2]
 
         if mirror == -1:
-            detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, gridPar.N, gridPar.N)
+            if np.ndim(gridPar.N) == 0:
+                nx = gridPar.N
+                ny = gridPar.N
+            else:
+                nx = gridPar.N[1]
+                ny = gridPar.N[0]
+
+            detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, nx, ny)
             detPSFrot = np.flip(detPSFrot, axis=-1)
-            detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, gridPar.N ** 2)
+            detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, gridPar.Nch)
 
         detPSFrot = rotate(detPSFrot, theta, resize=False, center=None, order=None, mode='constant', cval=0,
                            clip=True, preserve_range=False)
@@ -595,8 +618,8 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, rotParam = None, stedPar = None, spad = N
     if spad is None:
         spad = Pinholes(gridPar)
     
-    PSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, gridPar.N**2) )
-    detPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, gridPar.N**2) )
+    PSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, gridPar.Nch) )
+    detPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, gridPar.Nch) )
     exPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx) )
     
     for i, z in enumerate(zeta):
