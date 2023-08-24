@@ -89,7 +89,7 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float 
 
 def ShowDataset(dset: np.ndarray, cmap: str = 'hot', pxsize: float = None, normalize: bool = False,
                 colorbar: bool = False, xlims: list = [None, None], ylims: list = [None, None],
-                extent = None, figsize: tuple = (6, 6)) -> plt.Figure:
+                extent = None, figsize: tuple = (6, 6), gridshape = None) -> plt.Figure:
     '''
     It displays all the images of the ISM dataset in a squared grid.
     It returns the corresponding figure.
@@ -121,16 +121,24 @@ def ShowDataset(dset: np.ndarray, cmap: str = 'hot', pxsize: float = None, norma
         Matplotlib figure.
     '''
 
-    N = int(np.sqrt(dset.shape[-1]))
+    if gridshape is None:
+        nx = int(np.sqrt(dset.shape[-1]))
+        ny = int(np.sqrt(dset.shape[-1]))
+    else:
+        nx = gridshape[0]
+        ny = gridshape[1]
 
     if normalize == True:
         vmin = np.min(dset)
         vmax = np.max(dset)
         norm = Normalize(vmin=vmin, vmax=vmax)
 
-    fig, ax = plt.subplots(N, N, sharex=True, sharey=True, figsize=figsize)
-    for i in range(N * N):
-        idx = np.unravel_index(i, [N, N])
+    fig, ax = plt.subplots(nx, ny, sharex=True, sharey=True, figsize=figsize)
+    for i in range(nx*ny):
+        if np.min( [nx, ny] ) > 1:
+            idx = np.unravel_index(i, [nx, ny])
+        else:
+            idx = i
         if normalize == True:
             im = ax[idx].imshow(dset[:, :, i], norm=norm, cmap=cmap, extent=extent)
         else:
