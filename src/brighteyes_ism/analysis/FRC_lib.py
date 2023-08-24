@@ -283,7 +283,7 @@ def FRC_resolution(I1, I2, px = 1, method = 'fixed', smoothing = 'lowess'):
     
     return res_um, k, frc, k_interp, frc_smooth, th
 
-def timeFRC(dset, px = 1, method = 'fixed'):
+def timeFRC(dset, px = 1, method = 'fixed', smoothing = 'lowess'):
     """
     Fourier Ring Correlation analysis. It requires a single dataset with a
     temporal dimension to generate two images using the even and odd indices
@@ -295,9 +295,14 @@ def timeFRC(dset, px = 1, method = 'fixed'):
         dataset (Nx x Ny x Nt)
     px : float
         Pixel size of the images
-    Method : str
+    method : str
         Threshold criterium. If 'fixed', it uses the 1/7 threshold.
         Other possibilities are '3sigma' and '5sigma'
+    smoothing : str
+        Smoothing method for the FRC curve. If 'lowess' it smooths and
+        interpolates the curve using a lowess algorithm. If 'fit' it fits the
+        curve with a sigmoid model and removes high-frequency offset, if present.
+        Default is 'lowess'.
 
     Returns
     -------
@@ -322,7 +327,7 @@ def timeFRC(dset, px = 1, method = 'fixed'):
         img_even = dset[:, :, 0:-1:2].sum(axis = -1)
         img_odd  = dset[:, :, 1::2].sum(axis = -1)
     
-    res_um, k, frc, k_interp, frc_smooth, th = FRC_resolution(img_even, img_odd, px = px, method = method)
+    res_um, k, frc, k_interp, frc_smooth, th = FRC_resolution(img_even, img_odd, px = px, method = method, smoothing = smoothing)
     
     return res_um, k, frc, k_interp, frc_smooth, th
 
@@ -348,7 +353,10 @@ def plotFRC(res_um, k, frc, k_interp, frc_smooth, th, fig = None, ax = None):
 
     Returns
     -------
-    None.
+    fig : plt.Figure
+        Matplotlib figure.
+    ax : plt.axis
+        Matplotlib axis.
     """
     
     if fig == None or ax == None:
