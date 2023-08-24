@@ -269,6 +269,9 @@ def FRC_resolution(I1, I2, px = 1, method = 'fixed', smoothing = 'lowess'):
         frc_smooth = (sigmoid_fit(k_interp, *popt) - offset)/ amplitude
         frc = (frc - offset)/ amplitude
 
+    else:
+        raise ValueError('The smoothing parameter has to be "fit" or "lowess".')
+
     if method == 'fixed':
         th, idx = fixed_threshold(frc_smooth, 1/7)
     elif method == '3sigma':
