@@ -60,7 +60,7 @@ class metadata:
         Prints all the metadata on screen (name and value).
     """
     
-    __slots__ = ['version', 'comment', 'rangex', 'rangey', 'rangez', 'nbin', 'dt', 'nx', 'ny', 'nz', 'nrep', 'calib_x', 'calib_y', 'calib_z']
+    # __slots__ = ['version', 'comment', 'rangex', 'rangey', 'rangez', 'nbin', 'dt', 'nx', 'ny', 'nz', 'nrep', 'calib_x', 'calib_y', 'calib_z']
     
     def __init__(self, f):
             
@@ -142,10 +142,13 @@ class metadata:
         return(self.nmicroim * self.dt * 1e-6)
     
     def Print(self):
-        for prop in self.__slots__:
-            print(prop, end = '')
-            print(' ' * int(14 - len(prop)), end = '')
-            print(str(getattr(self, prop)))
+        dic = self.__dict__
+        names = list(dic)
+        values = list(dic.values())
+        for n, name in enumerate(names):
+            print(name, end = '')
+            print(' ' * int(14 - len(name)), end = '')
+            print(str(values[n]))
             
 
 def metadata_load(fname: str):

@@ -130,6 +130,15 @@ class GridParameters:
     def copy(self):
         return cp.copy(self)
 
+    def Print(self):
+        dic = self.__dict__
+        names = list(dic)
+        values = list(dic.values())
+        for n, name in enumerate(names):
+            print(name, end = '')
+            print(' ' * int(14 - len(name)), end = '')
+            print(str(values[n]))
+
 class simSettings:
     """
     Optical settings used to calculate the psf 
@@ -253,7 +262,17 @@ class simSettings:
 
     def copy(self):
         return cp.copy(self)
-        
+
+    def Print(self):
+        dic = self.__dict__
+        names = list(dic)
+        values = list(dic.values())
+        for n, name in enumerate(names):
+            print(name, end = '')
+            print(' ' * int(14 - len(name)), end = '')
+            print(str(values[n]))
+
+
 def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False):
     """
     Simulate PSFs with PyFocus
