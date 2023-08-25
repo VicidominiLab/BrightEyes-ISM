@@ -240,8 +240,6 @@ def FRC_resolution(I1, I2, px = 1, method = 'fixed', smoothing = 'lowess'):
         Threshold curve
     """
     
-    Nx, Ny = I1.shape
-    
     frc = FRC(I1, I2)
     F = len(frc)
 
@@ -265,7 +263,7 @@ def FRC_resolution(I1, I2, px = 1, method = 'fixed', smoothing = 'lowess'):
         amplitude = popt[0]
         offset = popt[-1]
 
-        k_interp = np.linspace(0, max_kpx, F*1000, endpoint = True) / px
+        k_interp = np.linspace(0, max_kpx, F*100, endpoint = True) / px
         frc_smooth = (sigmoid_fit(k_interp, *popt) - offset)/ amplitude
         frc = (frc - offset)/ amplitude
 
