@@ -551,37 +551,24 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, n_photon_excitation = 1,
     else:
         return PSF, detPSFrot, exPSF
     
-def SPAD_PSF_3D(gridPar, exPar, emPar, rotParam = None, stedPar = None, spad = None, stack: str = 'symmetrical',
+def SPAD_PSF_3D(gridPar, exPar, emPar, rotParam = None, n_photon_excitation = 1, stedPar = None, spad = None, stack: str = 'symmetrical',
                 normalize = True):
     """
     It calculates a z-stack of PSFs for all the elements of the SPAD array detector.
 
     Parameters
     ----------
-    N : int
-        Number of detector elements in the array in each dimension (typically 5)
-    Nx : int
-        Number of pixels in each dimension in the simulation array (e.g. 1024)
-    pxpitch : float
-        Pixel pitch of the detector [nm] (real space, typically 75000)
-    pxdim : float
-        Detector element size [nm] (real space, typically 50000)
-    pxsizex : float
-        Pixel size of the simulation space [nm] (typically 1)
-    M : float
-        Total magnification of the optical system (typically 500)
+    gridPar : GridParameters object
+        object with simulation space parameters
     exPar : simSettings object
         object with excitation PSF parameters
     emPar : simSettings object
         object with emission PSF parameters
-    Nz : int
-        number of axial planes (typically an odd integer)
-        the planes are symmetrically calculated around the focal plane (z = 0)
-    pxisez : float
-        distance between axial planes [nm]
     rotParam : np.ndarray
         array with the mirror and rotation angle to apply to the detection PSFs.
         The default is None.
+    n_photon_excitation : int
+        Order of non-linear excitation. Default is 1.
     stedPar : simSettings object
         object with STED beam parameters
     spad : np.array( N**2 x Nx x Nx)
@@ -622,6 +609,7 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, rotParam = None, stedPar = None, spad = N
     for i, z in enumerate(zeta):
         print( f'Calculating the PSFs at z = {z} nm')
         PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = rotParam,
+                                                                          n_photon_excitation = n_photon_excitation,
                                                                           stedPar = stedPar, z_shift = z, spad = spad,
                                                                           normalize = False)
 
