@@ -439,25 +439,15 @@ def Pinholes(gridPar):
 
     return p
 
-def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, stedPar = None, z_shift=0, spad = None,
+def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, n_photon_excitation = 1, stedPar = None, z_shift = 0, spad = None,
                 return_entrance_field = False, normalize = True):
     """
     Calculate PSFs for all pixels of the SPAD array by using FFTs
 
     Parameters
     ----------
-    N : int
-        Number of detector elements in the array in each dimension (typically 5)
-    Nx : int
-        Number of pixels in each dimension in the simulation array (e.g. 1024)
-    pxpitch : float
-        Pixel pitch of the detector [nm] (real space, typically 75000)
-    pxdim : float
-        Detector element size [nm] (real space, typically 50000)
-    pxsizex : float
-        Pixel size of the simulation space [nm] (typically 1)
-    M : float
-        Total magnification of the optical system (typically 500)
+    gridPar : GridParameters object
+        object with simulation space parameters
     exPar : simSettings object
         object with excitation PSF parameters
     emPar : simSettings object
@@ -465,10 +455,12 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, stedPar = None, z_shift=
     rotParam : np.ndarray
         array with the mirror and rotation angle to apply to the detection PSFs.
         The default is None.
+    n_photon_excitation : int
+        Order of non-linear excitation. Default is 1.
     stedPar : simSettings object
         object with STED beam parameters
     z_shift : float
-        Distance from the focal plane at which generate the PSF [nm] (optional)
+        Distance from the focal plane at which generate the PSF [nm]
     spad : np.array( N**2 x Nx x Nx)
         Pinholes distribution . If none it is calculated using the input parameters
     return_entrance_field : bool
@@ -505,6 +497,11 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, stedPar = None, z_shift=
 
     for i in range(gridPar.Nch):
         detPSF[:,:,i] = sgn.convolve( emPSF, spad[:,:,i], mode ='same' )
+
+    # Apply non-linearity to excitation
+
+    if n_photon_excitation > 1:
+        exPSF = exPSF ** n_photon_excitation
 
     # Simulate donut
     
