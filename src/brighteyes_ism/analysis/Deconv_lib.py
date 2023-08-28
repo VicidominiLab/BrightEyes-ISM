@@ -332,7 +332,7 @@ def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None,
                 
                 conv = convolve( obj, h[:, :, n], mode = 'same' ) + bkg[:,:,n]
                 A = np.where(conv < epsilon, 0, i[:, :, n] / conv)
-                B = convolve( hT[:, :, n], A, mode = 'same' )
+                B = convolve( A, hT[:, :, n], mode = 'same' )
                 tmp += B
             
         obj = ( obj * tmp / ( 1 + reg * obj ) ) # * s[n]
