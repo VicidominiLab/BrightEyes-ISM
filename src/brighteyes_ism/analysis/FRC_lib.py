@@ -254,11 +254,12 @@ def FRC_resolution(I1, I2, px = 1, method = 'fixed', smoothing = 'lowess'):
 
     elif smoothing == 'fit':
 
-        p0 = [1, 1, 1, 0]
+        p0 = (1, 1, 10, 0)
+        bounds = ( (0,0,0,0), (np.inf, np.inf, np.inf, np.inf) )
 
         sigmoid_fit = lambda x, a, b, c, d: a / (1 + np.exp((x - b) / c)) + d
 
-        popt, pcov = curve_fit(sigmoid_fit, k[kpx<0.5], frc[kpx<0.5], p0)
+        popt, pcov = curve_fit(sigmoid_fit, k[kpx<0.5], frc[kpx<0.5], p0, bounds = bounds)
 
         amplitude = popt[0]
         offset = popt[-1]
