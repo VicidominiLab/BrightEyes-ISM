@@ -131,7 +131,6 @@ def Reorder(dset, inOrder: str, outOrder: str = 'rzxytc'):
         for n, c in enumerate(inOrder):
             idx[n] = np.char.find(outOrder, c)
         idx = idx.astype('int')
-        print(idx)
         # remove undesired dimensions
         slices = []
         for i in idx:
