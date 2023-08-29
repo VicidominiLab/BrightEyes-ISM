@@ -54,7 +54,7 @@ It requires the following Python packages
 
 ## Documentation
 
-You can find an example of usage here:
+You can find some examples of usage here:
 
 https://github.com/VicidominiLab/BrightEyes-ISM/tree/main/examples
 

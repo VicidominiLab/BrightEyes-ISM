@@ -81,7 +81,10 @@ Note that the installation requires an hyphen symbol (brighteyes-ism), but the i
 Example
 ============
 
-An example of usage of BrightEyes-ISM can be found in the following notebook: https://github.com/VicidominiLab/BrightEyes-ISM/blob/main/examples/BrightEyes_ISM_demo.ipynb
+Some examples of usage of BrightEyes-ISM can be found in the following notebooks:
+
+    https://github.com/VicidominiLab/BrightEyes-ISM/tree/main/examples
+
 
 Citing
 ============
