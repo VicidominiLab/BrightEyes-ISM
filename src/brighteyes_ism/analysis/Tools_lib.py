@@ -81,14 +81,14 @@ def low_pass(img: np.ndarray, T: float, S: float, data: str = 'real'):
 
 # %%
 
-def Reorder(data, inOrder: str, outOrder: str = 'rzxytc'):
+def Reorder(dset, inOrder: str, outOrder: str = 'rzxytc'):
     '''
     It reorders a dataset to match the desired order of dimensions.
     If some dimensions are missing, it adds new dimensions.
 
     Parameters
     ----------
-    data : ndarray
+    dset : ndarray
         ISM dataset.
     inOrder : str
         Order of the dimension of the data.
@@ -103,7 +103,9 @@ def Reorder(data, inOrder: str, outOrder: str = 'rzxytc'):
 
     '''
 
-    if not (inOrder == outOrder):
+    data = dset.copy()
+
+    if (len(inOrder) < len(outOrder)):
         # adds missing dimensions
         Nout = len(outOrder)
         dataShape = np.shape(data)
@@ -122,6 +124,28 @@ def Reorder(data, inOrder: str, outOrder: str = 'rzxytc'):
                 order.append(Ndim + newdim)
                 newdim += 1
         data = np.transpose(data, order)
+
+    elif (len(inOrder) > len(outOrder)):
+        # check where the dimensions are located
+        idx = np.empty( len(inOrder) )
+        for n, c in enumerate(inOrder):
+            idx[n] = np.char.find(outOrder, c)
+        idx = idx.astype('int')
+        print(idx)
+        # remove undesired dimensions
+        slices = []
+        for i in idx:
+            if i == -1:
+                slices.append(np.s_[0])
+            else:
+                slices.append(np.s_[:])
+
+        slices = tuple(slices)
+        data = data[slices]
+
+        #reorder remaining dimensions
+        order = idx[idx != -1]
+        data = np.moveaxis(data, np.arange(np.ndim(data)), order)
 
     return data
 
@@ -149,7 +173,9 @@ def CropEdge(dset, npx=10, edges='l', order: str = 'rzxytc'):
 
     '''
 
-    dset_cropped = Reorder(dset, order)
+    default_order = 'rzxytc'
+
+    dset_cropped = Reorder(dset, inOrder = order, outOrder = default_order)
 
     if 'l' in edges:
         dset_cropped = dset_cropped[..., npx:, :, :, :]
@@ -163,7 +189,7 @@ def CropEdge(dset, npx=10, edges='l', order: str = 'rzxytc'):
     if 'd' in edges:
         dset_cropped = dset_cropped[..., :, :-npx, :, :]
 
-    return np.squeeze(dset_cropped)
+    return Reorder(dset_cropped, inOrder = default_order, outOrder = order)
 
 
 def DownSample(dset, ds: int = 2, order: str = 'rzxytc'):
@@ -186,11 +212,13 @@ def DownSample(dset, ds: int = 2, order: str = 'rzxytc'):
 
     '''
 
-    dset = Reorder(dset, order)
+    default_order = 'rzxytc'
+
+    dset = Reorder(dset, inOrder = order, outOrder = default_order)
 
     dset_ds = dset[..., ::ds, ::ds, :, :]
 
-    return np.squeeze(dset_ds)
+    return Reorder(dset_ds, inOrder = default_order, outOrder = order)
 
 
 def UpSample(dset, us: int = 2, npx: str = 'even', order: str = 'rzxytc'):
@@ -215,7 +243,9 @@ def UpSample(dset, us: int = 2, npx: str = 'even', order: str = 'rzxytc'):
 
     '''
 
-    dset = Reorder(dset, order)
+    default_order = 'rzxytc'
+
+    dset = Reorder(dset, inOrder = order, outOrder = default_order)
 
     sz = dset.shape
 
@@ -231,7 +261,7 @@ def UpSample(dset, us: int = 2, npx: str = 'even', order: str = 'rzxytc'):
     dset_us = np.zeros(sz_us)
     dset_us[..., ::us, ::us, :, :] = dset
 
-    return np.squeeze(dset_us)
+    return Reorder(dset_us, inOrder = default_order, outOrder = order)
 
 
 def ArgMaxND(data):
