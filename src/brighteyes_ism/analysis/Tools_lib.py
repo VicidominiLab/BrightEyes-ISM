@@ -105,29 +105,43 @@ def Reorder(dset, inOrder: str, outOrder: str = 'rzxytc'):
 
     data = dset.copy()
 
-    if (len(inOrder) < len(outOrder)):
-        # adds missing dimensions
-        Nout = len(outOrder)
-        dataShape = np.shape(data)
-        Ndim = len(dataShape)
-        for i in range(Nout - Ndim):
-            data = np.expand_dims(data, Ndim + i)
+    Nout = len(outOrder)
+    Ndim = len(inOrder)
 
-        # check order of dimensions
-        order = []
-        newdim = 0
-        for i in range(Nout):
-            dim = outOrder[i]
-            if dim in inOrder:
-                order.append(inOrder.find(dim))
+    if (Ndim < Nout):
+        # check where the current dimensions are located
+        idx = np.empty( Nout )
+        for n, c in enumerate(outOrder):
+            idx[n] = np.char.find(inOrder, c)
+        idx = idx.astype('int')
+
+        # add missing dimensions
+        slices = []
+        for i in idx:
+            if i == -1:
+                slices.append(np.newaxis)
             else:
-                order.append(Ndim + newdim)
-                newdim += 1
-        data = np.transpose(data, order)
+                slices.append(np.s_[:])
 
-    elif (len(inOrder) > len(outOrder)):
+        slices = tuple(slices)
+
+        data = data[slices]
+
+        # reorder final dimensions
+        idx2 = np.empty( Ndim )
+        for n, c in enumerate(inOrder):
+            idx2[n] = np.char.find(outOrder, c)
+        idx2 = idx2.astype('int')
+
+        order = idx.copy()
+        order[np.where(idx != -1)] = idx2
+        order[np.where(idx == -1)] = np.argwhere(idx == -1).flatten()
+
+        data = np.moveaxis(data, np.arange(Nout), order)
+
+    else:
         # check where the dimensions are located
-        idx = np.empty( len(inOrder) )
+        idx = np.empty( Ndim )
         for n, c in enumerate(inOrder):
             idx[n] = np.char.find(outOrder, c)
         idx = idx.astype('int')
@@ -144,7 +158,7 @@ def Reorder(dset, inOrder: str, outOrder: str = 'rzxytc'):
 
         #reorder remaining dimensions
         order = idx[idx != -1]
-        data = np.moveaxis(data, np.arange(np.ndim(data)), order)
+        data = np.moveaxis(data, np.arange(Nout), order)
 
     return data
 
