@@ -124,7 +124,6 @@ def Reorder(dset, inOrder: str, outOrder: str = 'rzxytc'):
                 slices.append(np.s_[:])
 
         slices = tuple(slices)
-
         data = data[slices]
 
         # reorder final dimensions
@@ -145,6 +144,7 @@ def Reorder(dset, inOrder: str, outOrder: str = 'rzxytc'):
         for n, c in enumerate(inOrder):
             idx[n] = np.char.find(outOrder, c)
         idx = idx.astype('int')
+
         # remove undesired dimensions
         slices = []
         for i in idx:
@@ -156,7 +156,7 @@ def Reorder(dset, inOrder: str, outOrder: str = 'rzxytc'):
         slices = tuple(slices)
         data = data[slices]
 
-        #reorder remaining dimensions
+        # reorder remaining dimensions
         order = idx[idx != -1]
         data = np.moveaxis(data, np.arange(Nout), order)
 
