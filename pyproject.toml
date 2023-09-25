@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "scikit-image>=0.19.2", "scikit-learn", "numpy", "scipy", "matplotlib", "joblib", "poppy", 	"PyCustomFocus", "h5py", "statsmodels", "tqdm", "matplotlib-scalebar"]
+requires = ["setuptools>=61.0", "scikit-image>=0.19.2", "scikit-learn", "numpy", "scipy", "matplotlib", "joblib", "poppy", 	"PyCustomFocus==2.3", "h5py", "statsmodels", "tqdm", "matplotlib-scalebar"]
 build-backend = "setuptools.build_meta"
 
 [project]

@@ -1,0 +1,12 @@
+numpy
+scipy
+scikit-image
+scikit-learn
+matplotlib
+joblib
+poppy
+PyCustomFocus==2.3
+tqdm
+h5py
+statsmodels
+matplotlib-scalebar
