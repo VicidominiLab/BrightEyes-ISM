@@ -92,6 +92,7 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float 
 
     return fig, ax
 
+
 def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str = None, planes: tuple = None,
               cmap: str = 'hot', figsize: tuple = (10, 10)):
     """
@@ -109,10 +110,12 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
     clabel : str
         Label of the colorbar.
     planes : tuple
-        Tuple containing the 
+        Coordinates (z0, x0, y0) of the slices.
     cmap : str, optional
         Colormap, to be chosen within the matplotlib list.
         The default is 'hot'.
+    figsize : tuple
+        Size of the figure. The default is (10, 10).
 
     Returns
     -------
