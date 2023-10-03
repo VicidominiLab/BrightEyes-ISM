@@ -108,6 +108,8 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
         Axial pixel size in micrometers (um).
     clabel : str
         Label of the colorbar.
+    planes : tuple
+        Tuple containing the 
     cmap : str, optional
         Colormap, to be chosen within the matplotlib list.
         The default is 'hot'.
@@ -160,12 +162,11 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
 
     # plot figure
 
-    # fig = plt.figure(figsize = (7,7), constrained_layout=True)
-    # gs = gridspec.GridSpec(2, 2, width_ratios=[1, 1], height_ratios=[1, 1])
-    #
-    # ax = np.asarray([plt.subplot(gs[i]) for i in range(4)]).reshape((2,2))
+    fig = plt.figure(figsize = figsize)
+    gs = gridspec.GridSpec(2, 2, width_ratios=[rangez, rangex], height_ratios=[rangex, rangez], wspace=0.05, hspace=0.05, left=0.05, right=0.95, bottom=0.05, top=0.95)
+    ax = np.asarray([plt.subplot(gs[i]) for i in range(4)]).reshape((2,2))
 
-    fig, ax = plt.subplots(2,2, sharex = 'col', sharey = 'row', figsize = figsize)
+    # fig, ax = plt.subplots(2,2, sharex = 'col', sharey = 'row', figsize = figsize)
 
     plt.subplots_adjust(wspace=0, hspace=0)
 
@@ -178,8 +179,6 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
     ax[1, 1].axis('off')
 
     ax[1, 0].axis('off')
-
-    fig.tight_layout()
 
     return fig
 
