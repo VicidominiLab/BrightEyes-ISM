@@ -218,7 +218,6 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
     return fig
 
 
-
 def ShowDataset(dset: np.ndarray, cmap: str = 'hot', pxsize: float = None, normalize: bool = False,
                 colorbar: bool = False, xlims: list = [None, None], ylims: list = [None, None],
                 extent = None, figsize: tuple = (6, 6), gridshape = None) -> plt.Figure:
