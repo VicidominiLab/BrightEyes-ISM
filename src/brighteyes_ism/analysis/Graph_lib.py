@@ -163,22 +163,17 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
     # plot figure
 
     fig = plt.figure(figsize = figsize)
-    gs = gridspec.GridSpec(2, 2, width_ratios=[rangez, rangex], height_ratios=[rangex, rangez], wspace=0.05, hspace=0.05, left=0.05, right=0.95, bottom=0.05, top=0.95)
+    gs = gridspec.GridSpec(2, 2, width_ratios=[rangez, rangex], height_ratios=[rangex, rangez],
+                           wspace=0.02, hspace=0.02, left=0.05, right=0.95, bottom=0.05, top=0.95)
     ax = np.asarray([plt.subplot(gs[i]) for i in range(4)]).reshape((2,2))
 
-    # fig, ax = plt.subplots(2,2, sharex = 'col', sharey = 'row', figsize = figsize)
-
-    plt.subplots_adjust(wspace=0, hspace=0)
-
-    ax[0, 0].imshow(image[::-1,:,y0].T, cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_zy)
+    ax[0, 0].imshow(image[::-1, :, y0].T, cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_zy)
     ax[0, 0].axis('off')
-
-    # ShowImg(image[z0], pxsize_x = pxsize_x, clabel = clabel, vmin = vmin, vmax = vmax, fig = fig, ax = ax[0,1])
 
     im = ax[0, 1].imshow(image[z0], cmap=cmap, vmin=vmin, vmax=vmax, extent=extent_xy)
     ax[0, 1].axis('off')
 
-    ax[1, 1].imshow(image[:,x0,:], cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_xz)
+    ax[1, 1].imshow(image[:, x0, :], cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_xz)
     ax[1, 1].axis('off')
 
     ax[1, 0].axis('off')
