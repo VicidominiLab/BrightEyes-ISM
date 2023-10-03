@@ -1,9 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from numbers import Number
+
 from matplotlib_scalebar.scalebar import ScaleBar
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.colors import Normalize
+import matplotlib.gridspec as gridspec
 
 import numbers
 
@@ -52,32 +55,35 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float 
     if fig == None or ax == None:
         fig, ax = plt.subplots()
 
-    im = ax.imshow(image, vmin=vmin, vmax=vmax, cmap=cmap)
+    Nx, Ny = image.shape
+    rangex = Nx * pxsize_x
+    rangey = Nx * pxsize_x
+    extent = (-rangex/2, rangex/2, -rangey/2, rangey/2)
+
+    im = ax.imshow(image, vmin=vmin, vmax=vmax, cmap=cmap, extent=extent)
     ax.axis('off')
 
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
     cbar = fig.colorbar(im, cax=cax, ticks=[])
-    # ax.text(1.0,0.4, clabel, rotation=90, transform=ax.transAxes)
 
-    # cbar.ax.set_ylabel(clabel, labelpad=-11, rotation=90)
-    #
-    # cbar.ax.text(1.02, 0.9, f'{int(np.floor(np.max(image)))}', rotation=90, transform=ax.transAxes)
-    #
-    # cbar.ax.text(1.02, 0.02, f'{int(np.floor(np.min(image)))}', rotation=90, transform=ax.transAxes, color='white')
+    vmax_text = int(np.floor(np.max(image)))
+    vmin_text = int(np.floor(np.min(image)))
 
-    vmax = int(np.floor(np.max(image)))
-    vmin = int(np.floor(np.min(image)))
+    if isinstance(clabel, Number):
+        clabel_text = f'Counts / {clabel:.0f} ' + '$\mathregular{\mu s}$'
+    else:
+        clabel_text = clabel
 
-    cbar.ax.text(0.6, 0.5, clabel, horizontalalignment='center', verticalalignment='center',
+    cbar.ax.text(0.6, 0.5, clabel_text, horizontalalignment='center', verticalalignment='center',
                  rotation='vertical', transform=cax.transAxes)
-    cbar.ax.text(0.6, 0.98, f'{vmax}', horizontalalignment='center', verticalalignment='top',
+    cbar.ax.text(0.6, 0.98, f'{vmax_text}', horizontalalignment='center', verticalalignment='top',
                  rotation='vertical', transform=cax.transAxes)
-    cbar.ax.text(0.6, 0.02, f'{vmin}', horizontalalignment='center', verticalalignment='bottom',
+    cbar.ax.text(0.6, 0.02, f'{vmin_text}', horizontalalignment='center', verticalalignment='bottom',
                  rotation='vertical', transform=cax.transAxes, color='white')
 
     scalebar = ScaleBar(
-        pxsize_x, "um",  # default, extent is calibrated in meters
+        1, "um",  # default, extent is calibrated in meters
         box_alpha=0,
         color='w',
         length_fraction=0.25)
@@ -85,6 +91,98 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float 
     ax.add_artist(scalebar)
 
     return fig, ax
+
+def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str = None, planes: tuple = None,
+              cmap: str = 'hot', figsize: tuple = (10, 10)):
+    """
+    It shows the input image with a scalebar and a colorbar.
+    It returns the corresponding figure and axis.
+
+    Parameters
+    ----------
+    image : np.ndarray
+        Image (Nz x Nx x Ny).
+    pxsize_x : float
+        Lateral ixel size in micrometers (um).
+    pxsize_z : float
+        Axial pixel size in micrometers (um).
+    clabel : str
+        Label of the colorbar.
+    cmap : str, optional
+        Colormap, to be chosen within the matplotlib list.
+        The default is 'hot'.
+
+    Returns
+    -------
+    fig : plt.Figure
+        Matplotlib figure.
+
+    """
+
+    Nz, Nx, Ny = image.shape
+
+    if planes is None:
+        x0 = Nx//2
+        y0 = Ny//2
+        z0 = Nz//2
+    else:
+        z0, x0, y0 = planes
+
+    rangez = Nz * pxsize_z
+    rangex = Nx * pxsize_x
+    rangey = Ny * pxsize_x
+
+     # define extents
+
+    extent_xy = ( -rangex/2, rangex/2, -rangey/2, rangey/2)
+    extent_xz = ( -rangex/2, rangex/2, -rangez/2, rangez/2)
+    extent_zy = ( -rangez/2, rangez/2, -rangey/2, rangey/2)
+
+    # find vmax
+
+    max3d = np.empty(image.ndim)
+
+    max3d[0] = np.max(image[z0, :, :])
+    max3d[1] = np.max(image[:, x0, :])
+    max3d[2] = np.max(image[:, :, y0])
+
+    vmax = np.max(max3d)
+
+    # find vmax
+
+    min3d = np.empty(image.ndim)
+
+    min3d[0] = np.min(image[z0, :, :])
+    min3d[1] = np.min(image[:, x0, :])
+    min3d[2] = np.min(image[:, :, y0])
+
+    vmin = np.max(min3d)
+
+    # plot figure
+
+    # fig = plt.figure(figsize = (7,7), constrained_layout=True)
+    # gs = gridspec.GridSpec(2, 2, width_ratios=[1, 1], height_ratios=[1, 1])
+    #
+    # ax = np.asarray([plt.subplot(gs[i]) for i in range(4)]).reshape((2,2))
+
+    fig, ax = plt.subplots(2,2, sharex = 'col', sharey = 'row', figsize = figsize)
+
+    plt.subplots_adjust(wspace=0, hspace=0)
+
+    ax[0, 0].imshow(image[::-1,:,y0].T, cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_zy)
+    ax[0, 0].axis('off')
+
+    ShowImg(image[z0], pxsize_x = pxsize_x, clabel = clabel, vmin = vmin, vmax = vmax, fig = fig, ax = ax[0,1])
+
+    ax[1, 1].imshow(image[:,x0,:], cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_xz)
+    ax[1, 1].axis('off')
+
+    ax[1, 0].axis('off')
+
+    fig.tight_layout()
+
+    return fig
+
 
 
 def ShowDataset(dset: np.ndarray, cmap: str = 'hot', pxsize: float = None, normalize: bool = False,
