@@ -173,12 +173,49 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
     ax[0, 0].imshow(image[::-1,:,y0].T, cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_zy)
     ax[0, 0].axis('off')
 
-    ShowImg(image[z0], pxsize_x = pxsize_x, clabel = clabel, vmin = vmin, vmax = vmax, fig = fig, ax = ax[0,1])
+    # ShowImg(image[z0], pxsize_x = pxsize_x, clabel = clabel, vmin = vmin, vmax = vmax, fig = fig, ax = ax[0,1])
+
+    im = ax[0, 1].imshow(image[z0], cmap=cmap, vmin=vmin, vmax=vmax, extent=extent_xy)
+    ax[0, 1].axis('off')
 
     ax[1, 1].imshow(image[:,x0,:], cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_xz)
     ax[1, 1].axis('off')
 
     ax[1, 0].axis('off')
+
+    # add colorbar
+
+    vmax_text = int(np.floor(vmax))
+    vmin_text = int(np.floor(vmin))
+
+    if isinstance(clabel, Number):
+        clabel_text = f'Counts / {clabel:.0f} ' + '$\mathregular{\mu s}$'
+    else:
+        clabel_text = clabel
+
+    y0 = ax[-1, -1].get_position().y0
+    y1 = ax[0, 0].get_position().y1
+    height = y1 - y0
+
+    cax = fig.add_axes([0.96, y0, 0.03, height])
+    cbar = fig.colorbar(im, cax=cax, ticks=[])
+
+    cbar.ax.text(0.6, 0.5, clabel_text, horizontalalignment='center', verticalalignment='center',
+                 rotation='vertical', transform=cax.transAxes)
+    cbar.ax.text(0.6, 0.98, f'{vmax_text}', horizontalalignment='center', verticalalignment='top',
+                 rotation='vertical', transform=cax.transAxes)
+    cbar.ax.text(0.6, 0.02, f'{vmin_text}', horizontalalignment='center', verticalalignment='bottom',
+                 rotation='vertical', transform=cax.transAxes, color='white')
+
+    # add scalebar
+
+    scalebar = ScaleBar(
+        1, "um",  # default, extent is calibrated in meters
+        box_alpha=0,
+        color='w',
+        length_fraction=0.25)
+
+    ax[0, 1].add_artist(scalebar)
 
     return fig
 
