@@ -181,6 +181,11 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
 
     ax[1, 0].axis('off')
 
+    # share axes
+
+    ax[0, 0].sharey(ax[0, 1])
+    ax[0, 1].sharex(ax[1, 1])
+
     # add colorbar
 
     vmax_text = int(np.floor(vmax))
