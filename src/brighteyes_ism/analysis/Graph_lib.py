@@ -102,7 +102,7 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
     Parameters
     ----------
     image : np.ndarray
-        Image (Nz x Nx x Ny).
+        Image (Nz x Ny x Nx).
     pxsize_x : float
         Lateral ixel size in micrometers (um).
     pxsize_z : float
@@ -251,20 +251,20 @@ def StackSlider(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str
     x1 = ax[1].get_position().x1
     width = x1 - x0
 
-    ax_y = fig.add_axes([x0, 0.01, width, 0.03])
-    y_slider = Slider(
-        ax=ax_y,
-        label='Y',
+    ax_x = fig.add_axes([x0, 0.01, width, 0.03])
+    x_slider = Slider(
+        ax=ax_x,
+        label='X',
         valmin=0,
         valmax=Nx-1,
         valinit=Nx//2,
         valstep = 1
     )
 
-    ax_x = fig.add_axes([0.01, y0, 0.0225, height])
-    x_slider = Slider(
-        ax=ax_x,
-        label="X",
+    ax_y = fig.add_axes([0.01, y0, 0.0225, height])
+    y_slider = Slider(
+        ax=ax_y,
+        label="Y",
         valmin=-Ny+1,
         valmax=0,
         valinit=-Ny//2,
@@ -272,7 +272,7 @@ def StackSlider(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str
         valfmt = '%u',
         orientation="vertical"
     )
-    x_slider.valtext.set_text(str(-x_slider.valinit))
+    y_slider.valtext.set_text(str(-y_slider.valinit))
 
     ax_z = fig.add_axes([x0, y1, width, 0.03])
     z_slider = Slider(
@@ -285,31 +285,31 @@ def StackSlider(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str
     )
 
     # The function to be called anytime a slider's value changes
-    def update_x(val):
-        x = int(-val)
+    def update_y(val):
+        y = int(-val)
         im = ax[3].get_images()[0]
-        im.set_data(image[:, x, :])
+        im.set_data(image[:, y, :])
 
-        x_units = - x*pxsize_x + rangey/2
+        y_units = - y*pxsize_x + rangey/2
 
-        seg_x = [np.array([[-rangex/2, x_units],
-                         [rangex/2, x_units]])]
+        seg_x = [np.array([[-rangex/2, y_units],
+                         [rangex/2, y_units]])]
 
         line_x.set_segments( seg_x )
 
-        x_slider.valtext.set_text(str(x))
+        y_slider.valtext.set_text(str(y))
 
         # fig.canvas.draw_idle()
 
-    def update_y(val):
-        y = int(val)
+    def update_x(val):
+        x = int(val)
         im = ax[0].get_images()[0]
-        im.set_data(image[::-1, :, y].T)
+        im.set_data(image[::-1, :, x].T)
 
-        y_units = y * pxsize_x - rangex / 2
+        x_units = x * pxsize_x - rangex / 2
 
-        seg_y = [np.array([[y_units, -rangey/2],
-                         [y_units, rangey/2]])]
+        seg_y = [np.array([[x_units, -rangey/2],
+                         [x_units, rangey/2]])]
 
         line_y.set_segments( seg_y )
 
