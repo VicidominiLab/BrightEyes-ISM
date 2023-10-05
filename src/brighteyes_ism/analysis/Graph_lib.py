@@ -177,7 +177,7 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
     im = ax[0, 1].imshow(image[z0], cmap=cmap, vmin=vmin, vmax=vmax, extent=extent_xy)
     ax[0, 1].axis('off')
 
-    ax[1, 1].imshow(image[:, x0, ::-1], cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_xz)
+    ax[1, 1].imshow(image[:, x0, :], cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_xz)
     ax[1, 1].axis('off')
 
     ax[1, 0].axis('off')
