@@ -124,7 +124,7 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
 
     """
 
-    Nz, Nx, Ny = image.shape
+    Nz, Ny, Nx = image.shape
 
     if planes is None:
         x0 = Nx//2
@@ -228,7 +228,7 @@ def StackSlider(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str
 
     from matplotlib.widgets import Slider
 
-    Nz, Nx, Ny = image.shape
+    Nz, Ny, Nx = image.shape
 
     rangez = Nz * pxsize_z
     rangex = Nx * pxsize_x
@@ -240,8 +240,8 @@ def StackSlider(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str
     line_y = ax[1].vlines(0, -rangey/2, rangey/2, colors='white', linestyles='dashed')
     line_x = ax[1].hlines(0, -rangex/2, rangex/2, colors='white', linestyles='dashed')
 
-    line_zx = ax[0].vlines(0, -rangex/2, rangex/2, colors='white', linestyles='dashed')
-    line_zy = ax[3].hlines(0, -rangey/2, rangey/2, colors='white', linestyles='dashed')
+    line_zx = ax[0].vlines(0, -rangey/2, rangey/2, colors='white', linestyles='dashed')
+    line_zy = ax[3].hlines(0, -rangex/2, rangex/2, colors='white', linestyles='dashed')
 
     y0 = ax[1].get_position().y0
     y1 = ax[1].get_position().y1
@@ -256,8 +256,8 @@ def StackSlider(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str
         ax=ax_y,
         label='Y',
         valmin=0,
-        valmax=Ny-1,
-        valinit=Ny//2,
+        valmax=Nx-1,
+        valinit=Nx//2,
         valstep = 1
     )
 
@@ -265,12 +265,14 @@ def StackSlider(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str
     x_slider = Slider(
         ax=ax_x,
         label="X",
-        valmin=0,
-        valmax=Nx-1,
-        valinit=Nx//2,
+        valmin=-Ny+1,
+        valmax=0,
+        valinit=-Ny//2,
         valstep = 1,
+        valfmt = '%u',
         orientation="vertical"
     )
+    x_slider.valtext.set_text(str(-x_slider.valinit))
 
     ax_z = fig.add_axes([x0, y1, width, 0.03])
     z_slider = Slider(
@@ -284,16 +286,18 @@ def StackSlider(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str
 
     # The function to be called anytime a slider's value changes
     def update_x(val):
-        x = int(val)
+        x = int(-val)
         im = ax[3].get_images()[0]
-        im.set_data(image[:, x, ::-1])
+        im.set_data(image[:, x, :])
 
-        x_units = x*pxsize_x - rangex/2
+        x_units = - x*pxsize_x + rangey/2
 
-        seg_x = [np.array([[-rangey/2, x_units],
-                         [rangey/2, x_units]])]
+        seg_x = [np.array([[-rangex/2, x_units],
+                         [rangex/2, x_units]])]
 
         line_x.set_segments( seg_x )
+
+        x_slider.valtext.set_text(str(x))
 
         # fig.canvas.draw_idle()
 
@@ -302,10 +306,10 @@ def StackSlider(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str
         im = ax[0].get_images()[0]
         im.set_data(image[::-1, :, y].T)
 
-        y_units = y * pxsize_x - rangey / 2
+        y_units = y * pxsize_x - rangex / 2
 
-        seg_y = [np.array([[y_units, -rangex/2],
-                         [y_units, rangex/2]])]
+        seg_y = [np.array([[y_units, -rangey/2],
+                         [y_units, rangey/2]])]
 
         line_y.set_segments( seg_y )
 
