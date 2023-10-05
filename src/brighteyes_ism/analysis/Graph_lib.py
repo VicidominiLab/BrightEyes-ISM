@@ -94,7 +94,7 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float 
 
 
 def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str = None, planes: tuple = None,
-              cmap: str = 'hot', figsize: tuple = (10, 10)):
+              vmin: float = None, vmax: float = None, cmap: str = 'hot', figsize: tuple = (10, 10)):
     """
     It shows the input image with a scalebar and a colorbar.
     It returns the corresponding figure and axis.
@@ -145,27 +145,28 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
 
     # find vmax
 
-    max3d = np.empty(image.ndim)
+    if vmax is None:
+        max3d = np.empty(image.ndim)
 
-    max3d[0] = np.max(image[z0, :, :])
-    max3d[1] = np.max(image[:, x0, :])
-    max3d[2] = np.max(image[:, :, y0])
+        max3d[0] = np.max(image[z0, :, :])
+        max3d[1] = np.max(image[:, x0, :])
+        max3d[2] = np.max(image[:, :, y0])
 
-    vmax = np.max(max3d)
+        vmax = np.max(max3d)
 
-    # find vmax
+    # find vmin
+    if vmin is None:
+        min3d = np.empty(image.ndim)
 
-    min3d = np.empty(image.ndim)
+        min3d[0] = np.min(image[z0, :, :])
+        min3d[1] = np.min(image[:, x0, :])
+        min3d[2] = np.min(image[:, :, y0])
 
-    min3d[0] = np.min(image[z0, :, :])
-    min3d[1] = np.min(image[:, x0, :])
-    min3d[2] = np.min(image[:, :, y0])
-
-    vmin = np.max(min3d)
+        vmin = np.max(min3d)
 
     # plot figure
-
     fig = plt.figure(figsize = figsize)
+
     gs = gridspec.GridSpec(2, 2, width_ratios=[rangez, rangex], height_ratios=[rangex, rangez],
                            wspace=0.02, hspace=0.02, left=0.05, right=0.95, bottom=0.05, top=0.95)
     ax = np.asarray([plt.subplot(gs[i]) for i in range(4)]).reshape((2,2))
@@ -221,6 +222,121 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
     ax[0, 1].add_artist(scalebar)
 
     return fig
+
+def StackSlider(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str = None,
+                 cmap: str = 'hot', figsize: tuple = (10, 10)):
+
+    from matplotlib.widgets import Slider
+
+    Nz, Nx, Ny = image.shape
+
+    rangez = Nz * pxsize_z
+    rangex = Nx * pxsize_x
+    rangey = Ny * pxsize_x
+
+    fig = ShowStack(image = image, pxsize_x = pxsize_x, pxsize_z = pxsize_z, clabel = clabel, cmap = cmap, figsize = figsize)
+    ax = fig.axes
+
+    line_y = ax[1].vlines(0, -rangey/2, rangey/2, colors='white', linestyles='dashed')
+    line_x = ax[1].hlines(0, -rangex/2, rangex/2, colors='white', linestyles='dashed')
+
+    line_zx = ax[0].vlines(0, -rangex/2, rangex/2, colors='white', linestyles='dashed')
+    line_zy = ax[3].hlines(0, -rangey/2, rangey/2, colors='white', linestyles='dashed')
+
+    y0 = ax[1].get_position().y0
+    y1 = ax[1].get_position().y1
+    height = y1 - y0
+
+    x0 = ax[1].get_position().x0
+    x1 = ax[1].get_position().x1
+    width = x1 - x0
+
+    ax_y = fig.add_axes([x0, 0.01, width, 0.03])
+    y_slider = Slider(
+        ax=ax_y,
+        label='Y',
+        valmin=0,
+        valmax=Ny-1,
+        valinit=Ny//2,
+        valstep = 1
+    )
+
+    ax_x = fig.add_axes([0.01, y0, 0.0225, height])
+    x_slider = Slider(
+        ax=ax_x,
+        label="X",
+        valmin=0,
+        valmax=Nx-1,
+        valinit=Nx//2,
+        valstep = 1,
+        orientation="vertical"
+    )
+
+    ax_z = fig.add_axes([x0, y1, width, 0.03])
+    z_slider = Slider(
+        ax=ax_z,
+        label="Z",
+        valmin=0,
+        valmax=Nz-1,
+        valinit=Nz//2,
+        valstep = 1
+    )
+
+    # The function to be called anytime a slider's value changes
+    def update_x(val):
+        x = int(val)
+        im = ax[3].get_images()[0]
+        im.set_data(image[:, x, ::-1])
+
+        x_units = x*pxsize_x - rangex/2
+
+        seg_x = [np.array([[-rangey/2, x_units],
+                         [rangey/2, x_units]])]
+
+        line_x.set_segments( seg_x )
+
+        # fig.canvas.draw_idle()
+
+    def update_y(val):
+        y = int(val)
+        im = ax[0].get_images()[0]
+        im.set_data(image[::-1, :, y].T)
+
+        y_units = y * pxsize_x - rangey / 2
+
+        seg_y = [np.array([[y_units, -rangex/2],
+                         [y_units, rangex/2]])]
+
+        line_y.set_segments( seg_y )
+
+        # fig.canvas.draw_idle()
+
+    def update_z(val):
+        z = int(val)
+        im = ax[1].get_images()[0]
+        im.set_data(image[z])
+
+        z_units = -z * pxsize_z + rangez / 2
+
+        seg_zx = [np.array([[z_units, -rangey/2],
+                         [z_units, rangey/2]])]
+
+        line_zx.set_segments( seg_zx )
+
+        seg_zy = [np.array([[-rangex/2, z_units],
+                         [rangex/2, z_units]])]
+
+        line_zy.set_segments( seg_zy )
+
+        # fig.canvas.draw_idle()
+
+    # register the update function with each slider
+    y_slider.on_changed(update_y)
+    x_slider.on_changed(update_x)
+    z_slider.on_changed(update_z)
+
+    return x_slider, y_slider, z_slider
+
 
 
 def ShowDataset(dset: np.ndarray, cmap: str = 'hot', pxsize: float = None, normalize: bool = False,
