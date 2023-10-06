@@ -167,7 +167,7 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
     # plot figure
     fig = plt.figure(figsize = figsize)
 
-    gs = gridspec.GridSpec(2, 2, width_ratios=[rangez, rangex], height_ratios=[rangex, rangez],
+    gs = gridspec.GridSpec(2, 2, width_ratios=[rangez, rangex], height_ratios=[rangey, rangez],
                            wspace=0.02, hspace=0.02, left=0.05, right=0.95, bottom=0.05, top=0.95)
     ax = np.asarray([plt.subplot(gs[i]) for i in range(4)]).reshape((2,2))
 
@@ -234,7 +234,15 @@ def StackSlider(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str
     rangex = Nx * pxsize_x
     rangey = Ny * pxsize_x
 
-    fig = ShowStack(image = image, pxsize_x = pxsize_x, pxsize_z = pxsize_z, clabel = clabel, cmap = cmap, figsize = figsize)
+    # Find color limits
+
+    vmax = np.max(image)
+    vmin = np.min(image)
+
+    # Make figure
+
+    fig = ShowStack(image = image, pxsize_x = pxsize_x, pxsize_z = pxsize_z, clabel = clabel, cmap = cmap,
+                    vmin = vmin, vmax= vmax, figsize = figsize)
     ax = fig.axes
 
     line_y = ax[1].vlines(0, -rangey/2, rangey/2, colors='white', linestyles='dashed')
@@ -258,7 +266,10 @@ def StackSlider(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str
         valmin=0,
         valmax=Nx-1,
         valinit=Nx//2,
-        valstep = 1
+        valstep = 1,
+        initcolor='none',
+        facecolor='grey',
+        track_color='grey'
     )
 
     ax_y = fig.add_axes([0.01, y0, 0.0225, height])
@@ -269,8 +280,10 @@ def StackSlider(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str
         valmax=0,
         valinit=-Ny//2,
         valstep = 1,
-        valfmt = '%u',
-        orientation="vertical"
+        initcolor='none',
+        orientation="vertical",
+        facecolor='grey',
+        track_color='grey'
     )
     y_slider.valtext.set_text(str(-y_slider.valinit))
 
@@ -281,7 +294,10 @@ def StackSlider(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str
         valmin=0,
         valmax=Nz-1,
         valinit=Nz//2,
-        valstep = 1
+        valstep = 1,
+        initcolor='none',
+        facecolor = 'grey',
+        track_color = 'grey'
     )
 
     # The function to be called anytime a slider's value changes
