@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "brighteyes-ism"
-version = "1.2.4"
+version = "1.2.5"
 authors = [
   { name="Alessandro Zunino", email="alessandro.zunino@iit.it" },
 ]
