@@ -99,6 +99,8 @@ class GridParameters:
         self.pxdim = pxdim  # nm - spad pixel size (real space) 57.3e-3 for cooled spad
         self.N = N  # number of pixels in the detector in each dimension (5x5 typically)
         self.M = M  # overall magnification of the system
+        self.rotation = 0  # rototion angle of the detector array (rad)
+        self.mirroring = 1  # flip of the x_d axis (+/- 1)
 
     @property
     def rangex(self):
@@ -137,7 +139,7 @@ class GridParameters:
         for n, name in enumerate(names):
             print(name, end = '')
             print(' ' * int(14 - len(name)), end = '')
-            print(str(values[n]))
+            print("" if values[n] is None else f'{values[n]:.2f}')
 
 class simSettings:
     """
@@ -458,7 +460,7 @@ def Pinholes(gridPar):
 
     return p
 
-def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, n_photon_excitation = 1, stedPar = None, z_shift = 0, spad = None,
+def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, z_shift = 0, spad = None,
                 return_entrance_field = False, normalize = True):
     """
     Calculate PSFs for all pixels of the SPAD array by using FFTs
@@ -533,28 +535,25 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, n_photon_excitation = 1,
 
     # Rotate and mirror detPSF
 
-    if rotParam is None:
-        detPSFrot = detPSF
+    detPSFrot = detPSF.copy()
+
+    if gridPar.mirroring == -1:
+        if np.ndim(gridPar.N) == 0:
+            nx = gridPar.N
+            ny = gridPar.N
+        else:
+            nx = gridPar.N[1]
+            ny = gridPar.N[0]
+
+        detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, nx, ny)
+        detPSFrot = np.flip(detPSFrot, axis=-1)
+        detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, gridPar.Nch)
+
+    if gridPar.rotation != 0:
+        detPSFrot = rotate(detPSFrot, gridPar.rotation, resize=False, center=None, order=None, mode='constant', cval=0,
+                       clip=True, preserve_range=False)
     else:
-        detPSFrot = detPSF.copy()
-
-        theta = rotParam[1] * 180 / np.pi
-        mirror = rotParam[2]
-
-        if mirror == -1:
-            if np.ndim(gridPar.N) == 0:
-                nx = gridPar.N
-                ny = gridPar.N
-            else:
-                nx = gridPar.N[1]
-                ny = gridPar.N[0]
-
-            detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, nx, ny)
-            detPSFrot = np.flip(detPSFrot, axis=-1)
-            detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, gridPar.Nch)
-
-        detPSFrot = rotate(detPSFrot, theta, resize=False, center=None, order=None, mode='constant', cval=0,
-                           clip=True, preserve_range=False)
+        detPSFrot = detPSF
 
     # Calculate total PSF
     
@@ -570,7 +569,7 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = None, n_photon_excitation = 1,
     else:
         return PSF, detPSFrot, exPSF
     
-def SPAD_PSF_3D(gridPar, exPar, emPar, rotParam = None, n_photon_excitation = 1, stedPar = None, spad = None, stack: str = 'symmetrical',
+def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, spad = None, stack: str = 'symmetrical',
                 normalize = True):
     """
     It calculates a z-stack of PSFs for all the elements of the SPAD array detector.
@@ -627,7 +626,7 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, rotParam = None, n_photon_excitation = 1,
     
     for i, z in enumerate(zeta):
         print( f'Calculating the PSFs at z = {z} nm')
-        PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(gridPar, exPar, emPar, rotParam = rotParam,
+        PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(gridPar, exPar, emPar,
                                                                           n_photon_excitation = n_photon_excitation,
                                                                           stedPar = stedPar, z_shift = z, spad = spad,
                                                                           normalize = False)
