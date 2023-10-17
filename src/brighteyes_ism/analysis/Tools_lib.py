@@ -405,3 +405,31 @@ def fingerprint(dset, volumetric=False):
         f = np.sum(dset, axis=axis)
         f = f.reshape(N, N)
     return f
+
+def point_cloud_from_img(dset):
+    """
+    Transform the image (or stack of images) into a point cloud matrix.
+    The matrix
+
+    Parameters
+    ----------
+    dset : np.ndarray
+        Image (Nz x Ny x Nx)
+
+    Returns
+    -------
+    point_cloud_matrix : np.ndarray
+        Point cloud matrix (Nz*Ny*Nx x 4)
+
+    """
+    shape = dset.shape
+
+    N = dset.size
+
+    indices = np.array(np.unravel_index(range(N), shape)).T
+
+    values = dset.flatten()
+
+    point_cloud_matrix = np.column_stack((indices, values))
+
+    return point_cloud_matrix
