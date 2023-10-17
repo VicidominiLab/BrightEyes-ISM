@@ -131,7 +131,7 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
         y0 = Ny//2
         z0 = Nz//2
     else:
-        z0, x0, y0 = planes
+        z0, y0, x0 = planes
 
     rangez = Nz * pxsize_z
     rangex = Nx * pxsize_x
@@ -149,8 +149,8 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
         max3d = np.empty(image.ndim)
 
         max3d[0] = np.max(image[z0, :, :])
-        max3d[1] = np.max(image[:, x0, :])
-        max3d[2] = np.max(image[:, :, y0])
+        max3d[1] = np.max(image[:, y0, :])
+        max3d[2] = np.max(image[:, :, x0])
 
         vmax = np.max(max3d)
 
@@ -159,8 +159,8 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
         min3d = np.empty(image.ndim)
 
         min3d[0] = np.min(image[z0, :, :])
-        min3d[1] = np.min(image[:, x0, :])
-        min3d[2] = np.min(image[:, :, y0])
+        min3d[1] = np.min(image[:, y0, :])
+        min3d[2] = np.min(image[:, :, x0])
 
         vmin = np.max(min3d)
 
@@ -171,13 +171,13 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
                            wspace=0.02, hspace=0.02, left=0.05, right=0.95, bottom=0.05, top=0.95)
     ax = np.asarray([plt.subplot(gs[i]) for i in range(4)]).reshape((2,2))
 
-    ax[0, 0].imshow(image[::-1, :, y0].T, cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_zy)
+    ax[0, 0].imshow(image[::-1, :, x0].T, cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_zy)
     ax[0, 0].axis('off')
 
     im = ax[0, 1].imshow(image[z0], cmap=cmap, vmin=vmin, vmax=vmax, extent=extent_xy)
     ax[0, 1].axis('off')
 
-    ax[1, 1].imshow(image[:, x0, :], cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_xz)
+    ax[1, 1].imshow(image[:, y0, :], cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_xz)
     ax[1, 1].axis('off')
 
     ax[1, 0].axis('off')
