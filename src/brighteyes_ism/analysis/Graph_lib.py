@@ -94,7 +94,7 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float 
 
 
 def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str = None, planes: tuple = None,
-              vmin: float = None, vmax: float = None, cmap: str = 'hot', figsize: tuple = (10, 10)):
+              projection = None, vmin: float = None, vmax: float = None, cmap: str = 'hot', figsize: tuple = (10, 10)):
     """
     It shows the input image with a scalebar and a colorbar.
     It returns the corresponding figure and axis.
@@ -126,6 +126,8 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
 
     Nz, Ny, Nx = image.shape
 
+    # find slice coordinates
+
     if planes is None:
         x0 = Nx//2
         y0 = Ny//2
@@ -143,14 +145,25 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
     extent_xz = ( -rangex/2, rangex/2, -rangez/2, rangez/2)
     extent_zy = ( -rangez/2, rangez/2, -rangey/2, rangey/2)
 
+    # generate projection images
+
+    if projection == 'mip':
+        image_z = image.max(axis=0)
+        image_y = image.max(axis=1)
+        image_x = image.max(axis=2)
+    else:
+        image_z = image[z0, :, :]
+        image_y = image[:, y0, :]
+        image_x = image[:, :, x0]
+
     # find vmax
 
     if vmax is None:
         max3d = np.empty(image.ndim)
 
-        max3d[0] = np.max(image[z0, :, :])
-        max3d[1] = np.max(image[:, y0, :])
-        max3d[2] = np.max(image[:, :, x0])
+        max3d[0] = np.max(image_z)
+        max3d[1] = np.max(image_y)
+        max3d[2] = np.max(image_x)
 
         vmax = np.max(max3d)
 
@@ -158,9 +171,9 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
     if vmin is None:
         min3d = np.empty(image.ndim)
 
-        min3d[0] = np.min(image[z0, :, :])
-        min3d[1] = np.min(image[:, y0, :])
-        min3d[2] = np.min(image[:, :, x0])
+        min3d[0] = np.min(image_z)
+        min3d[1] = np.min(image_y)
+        min3d[2] = np.min(image_x)
 
         vmin = np.max(min3d)
 
@@ -171,13 +184,13 @@ def ShowStack(image: np.ndarray, pxsize_x: float, pxsize_z: float, clabel: str =
                            wspace=0.02, hspace=0.02, left=0.05, right=0.95, bottom=0.05, top=0.95)
     ax = np.asarray([plt.subplot(gs[i]) for i in range(4)]).reshape((2,2))
 
-    ax[0, 0].imshow(image[::-1, :, x0].T, cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_zy)
+    ax[0, 0].imshow(image_x[::-1, :].T, cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_zy)
     ax[0, 0].axis('off')
 
-    im = ax[0, 1].imshow(image[z0], cmap=cmap, vmin=vmin, vmax=vmax, extent=extent_xy)
+    im = ax[0, 1].imshow(image_z, cmap=cmap, vmin=vmin, vmax=vmax, extent=extent_xy)
     ax[0, 1].axis('off')
 
-    ax[1, 1].imshow(image[:, y0, :], cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_xz)
+    ax[1, 1].imshow(image_y, cmap = cmap, vmin = vmin, vmax = vmax, extent = extent_xz)
     ax[1, 1].axis('off')
 
     ax[1, 0].axis('off')
