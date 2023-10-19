@@ -16,6 +16,8 @@ The analysis module contains libraries for:
 * Focus-ISM (https://doi.org/10.1038/s41467-022-35333-y)
 * Image Deconvolution (https://doi.org/10.1088/1361-6420/accdc5)
 * Fourier Ring Correlation (https://doi.org/10.1038/s41467-019-11024-z)
+* Image and ISM datasets visualization
+* Miscellaneous tools
 
 The simulation module contains libraries for:
 
@@ -68,16 +70,24 @@ If you find BrightEyes-ISM useful for your research, please cite it as:
 
 _Zunino, A., Slenders, E., Fersini, F. et al. Open-source tools enable accessible and advanced image scanning microscopy data analysis. Nat. Photon. (2023). https://doi.org/10.1038/s41566-023-01216-x_
 
-
-## Contributing
-
-Contributions are very welcome. Tests can be run with [tox], please ensure
-the coverage at least stays the same before you submit a pull request.
-
 ## License
 
 Distributed under the terms of the [GNU GPL v3.0] license,
 "BrightEyes-ISM" is free and open source software
+
+## Contributing
+
+You want to contribute? Great!
+Contributing works best if you creat a pull request with your changes.
+
+1. Fork the project.
+2. Create a branch for your feature: `git checkout -b cool-new-feature`
+3. Commit your changes: `git commit -am 'My new feature'`
+4. Push to the branch: `git push origin cool-new-feature`
+5. Submit a pull request!
+
+If you are unfamilar with pull requests, you find more information on pull requests in the
+ [github help](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests)
 
 ## Issues
 
