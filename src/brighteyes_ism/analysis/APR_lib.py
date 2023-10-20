@@ -101,7 +101,7 @@ def ShiftVectors(dset: np.ndarray, usf: int, ref: int, apodize: bool = True, fil
     Returns
     -------
     shift_vec : np.ndarray
-        Shift-vectors (Nch x 2). The second dimension is the x/y axis.
+        Shift-vectors (Nch x 2). The second dimension is the xy-axes.
     error : np.ndarray
         Estimation error of the shift-vectors.
 
