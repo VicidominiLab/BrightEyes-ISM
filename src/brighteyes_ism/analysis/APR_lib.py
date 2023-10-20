@@ -127,7 +127,7 @@ def ShiftVectors(dset: np.ndarray, usf: int, ref: int, apodize: bool = True, fil
     error = np.empty((sz[-1], 2))
 
     for i in range(sz[-1]):
-        shift_vec[i, :], error[i, :], diffphase = phase_cross_correlation(dsetW[:, :, ref], dset[:, :, i],
+        shift_vec[i, :], error[i, :], diffphase = phase_cross_correlation(dsetW[:, :, ref], dsetW[:, :, i],
                                                                           upsample_factor=usf, normalization=None)
 
     return shift_vec, error
