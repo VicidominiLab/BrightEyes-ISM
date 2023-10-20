@@ -32,7 +32,7 @@ def hann2d(shape: tuple):
     return W
 
 
-def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool = True, filter_sigma: float = 2,
+def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool = True, filter_sigma: float = 0,
         mode: str = 'interp'):
     '''
     It performs adaptive pixel reassignment on a single-plane ISM dataset using the phase correlation method.
@@ -52,7 +52,7 @@ def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool =
         The default is True.
     filter_sigma: float
         If bigger than zero, the dataset is denoised with a gaussian filter.
-        The default is 2.
+        The default is 0.
     mode : str, optional
         Registration method. It can be a fourier shift ('fourier'')
         or a linear interpolation ('interp'). The default is 'interp'.
@@ -79,7 +79,7 @@ def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool =
     return shift_vec, result_ism_pc
 
 
-def ShiftVectors(dset: np.ndarray, usf: int, ref: int, apodize: bool = True, filter_sigma: float = 2):
+def ShiftVectors(dset: np.ndarray, usf: int, ref: int, apodize: bool = True, filter_sigma: float = 0):
     '''
     It calculates the shift-vectors from a single-plane ISM dataset using the phase correlation method.
 
@@ -96,7 +96,7 @@ def ShiftVectors(dset: np.ndarray, usf: int, ref: int, apodize: bool = True, fil
         The default is True.
     filter_sigma: float
         If bigger than zero, the dataset is denoised with a gaussian filter.
-        The default is 2.
+        The default is 0.
 
     Returns
     -------
