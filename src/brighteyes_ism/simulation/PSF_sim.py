@@ -550,7 +550,8 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
         detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, gridPar.Nch)
 
     if gridPar.rotation != 0:
-        detPSFrot = rotate(detPSFrot, gridPar.rotation, resize=False, center=None, order=None, mode='constant', cval=0,
+        theta = np.rad2deg(gridPar.rotation)
+        detPSFrot = rotate(detPSFrot, theta, resize=False, center=None, order=None, mode='constant', cval=0,
                        clip=True, preserve_range=False)
 
     # Calculate total PSF
