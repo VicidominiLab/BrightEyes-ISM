@@ -5,6 +5,8 @@ from PyFocus.custom_mask_functions import generate_incident_field, custom_mask_f
 from poppy.zernike import noll_indices, R, zern_name
 import copy as cp
 
+from tqdm import tqdm
+
 #%% Zernike
 
 def Zernike(index, A, h, rho, phi, normalize = True):
@@ -275,7 +277,7 @@ class simSettings:
             print(str(values[n]))
 
 
-def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False):
+def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verbose = True):
     """
     Simulate PSFs with PyFocus
 
@@ -337,7 +339,7 @@ def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False):
     
         #Calculation of focus fields
     
-        EX, EY, EZ = custom_mask_focus_field_XY(ex_lens, ey_lens, par.alpha, par.h, par.wl/par.n, z_shift, Nx, par.mask_sampl, par.mask_sampl, x_range, countdown=True, x0=0, y0=0)
+        EX, EY, EZ = custom_mask_focus_field_XY(ex_lens, ey_lens, par.alpha, par.h, par.wl/par.n, z_shift, Nx, par.mask_sampl, par.mask_sampl, x_range, countdown=verbose, x0=0, y0=0)
     
         # Calculation of PSF intensity
     
@@ -348,7 +350,7 @@ def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False):
         else:
             return PSF
 
-def PSFs2D(exPar, emPar, pxsizex, Nx, z_shift = 0, return_entrance_field = False):
+def PSFs2D(exPar, emPar, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verbose = True):
     """
     Simulate PSFs with PyFocus
 
@@ -383,11 +385,11 @@ def PSFs2D(exPar, emPar, pxsizex, Nx, z_shift = 0, return_entrance_field = False
         
         # Excitation PSF
         
-        ex_PSF, ex_fields = singlePSF(exPar, pxsizex, Nx, z_shift = z_shift, return_entrance_field = True)
+        ex_PSF, ex_fields = singlePSF(exPar, pxsizex, Nx, z_shift = z_shift, return_entrance_field = True, verbose = verbose)
         
         # Emission PSF
         
-        em_PSF, em_fields = singlePSF(emPar, pxsizex, Nx, z_shift = z_shift, return_entrance_field = True)
+        em_PSF, em_fields = singlePSF(emPar, pxsizex, Nx, z_shift = z_shift, return_entrance_field = True, verbose = verbose)
     
         return ex_PSF, em_PSF, ex_fields, em_fields
     
@@ -395,11 +397,11 @@ def PSFs2D(exPar, emPar, pxsizex, Nx, z_shift = 0, return_entrance_field = False
         
         # Excitation PSF
         
-        ex_PSF = singlePSF(exPar, pxsizex, Nx, z_shift = z_shift)
+        ex_PSF = singlePSF(exPar, pxsizex, Nx, z_shift = z_shift, verbose = verbose)
         
         # Emission PSF
         
-        em_PSF = singlePSF(emPar, pxsizex, Nx, z_shift = z_shift)
+        em_PSF = singlePSF(emPar, pxsizex, Nx, z_shift = z_shift, verbose = verbose)
     
         return ex_PSF, em_PSF
 
@@ -461,7 +463,7 @@ def Pinholes(gridPar):
     return p
 
 def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, z_shift = 0, spad = None,
-                return_entrance_field = False, normalize = True):
+                return_entrance_field = False, normalize = True, verbose = True):
     """
     Calculate PSFs for all pixels of the SPAD array by using FFTs
 
@@ -507,9 +509,9 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
     # Simulate ism psfs
     
     if return_entrance_field == True:
-        exPSF, emPSF, ex_fields, em_fields = PSFs2D(exPar, emPar, gridPar.pxsizex, gridPar.Nx, z_shift = z_shift, return_entrance_field = True)
+        exPSF, emPSF, ex_fields, em_fields = PSFs2D(exPar, emPar, gridPar.pxsizex, gridPar.Nx, z_shift = z_shift, return_entrance_field = True, verbose = verbose)
     else:
-        exPSF, emPSF = PSFs2D(exPar, emPar, gridPar.pxsizex, gridPar.Nx, z_shift = z_shift)
+        exPSF, emPSF = PSFs2D(exPar, emPar, gridPar.pxsizex, gridPar.Nx, z_shift = z_shift, verbose = verbose)
     
     if spad is None:
         spad = Pinholes(gridPar)
@@ -528,7 +530,7 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
     
     if type(stedPar) == simSettings:
         stedPar.mask = 'VP'
-        donut = singlePSF(stedPar, gridPar.pxsizex, gridPar.Nx, z_shift = z_shift)
+        donut = singlePSF(stedPar, gridPar.pxsizex, gridPar.Nx, z_shift = z_shift, verbose = verbose)
         donut *= stedPar.sted_sat/np.max(donut)
         stedPSF = np.exp( - donut * stedPar.sted_pulse / stedPar.sted_tau )
         exPSF *= stedPSF
@@ -569,7 +571,7 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
         return PSF, detPSFrot, exPSF
     
 def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, spad = None, stack: str = 'symmetrical',
-                normalize = True):
+                normalize = True, verbose = True):
     """
     It calculates a z-stack of PSFs for all the elements of the SPAD array detector.
 
@@ -622,13 +624,15 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
     PSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, gridPar.Nch) )
     detPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, gridPar.Nch) )
     exPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx) )
-    
-    for i, z in enumerate(zeta):
-        print( f'Calculating the PSFs at z = {z} nm')
+
+    print(f'Calculating the PSFs stack from z = {zeta[0]} nm to z = {zeta[-1]} nm:')
+    i = 0
+    for z in tqdm(zeta):
         PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(gridPar, exPar, emPar,
                                                                           n_photon_excitation = n_photon_excitation,
                                                                           stedPar = stedPar, z_shift = z, spad = spad,
-                                                                          normalize = False)
+                                                                          normalize = False, verbose = False)
+        i += 1
 
     if normalize == True:
         idx = np.argwhere(zeta == 0).item()
