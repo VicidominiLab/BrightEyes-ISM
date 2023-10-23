@@ -625,14 +625,14 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
     detPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, gridPar.Nch) )
     exPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx) )
 
-    print(f'Calculating the PSFs stack from z = {zeta[0]} nm to z = {zeta[-1]} nm:')
-    i = 0
-    for z in tqdm(zeta):
-        PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(gridPar, exPar, emPar,
-                                                                          n_photon_excitation = n_photon_excitation,
-                                                                          stedPar = stedPar, z_shift = z, spad = spad,
-                                                                          normalize = False, verbose = False)
-        i += 1
+    if verbose == True:
+        print(f'Calculating the PSFs stack from z = {zeta[0]} nm to z = {zeta[-1]} nm:')
+        zeta_range = tqdm(zeta)
+    else:
+        zeta_range = zeta
+
+    for i, z in enumerate( zeta_range ):
+        PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = n_photon_excitation, stedPar = stedPar, z_shift = z, spad = spad, normalize = False, verbose = False)
 
     if normalize == True:
         idx = np.argwhere(zeta == 0).item()
