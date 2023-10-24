@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.special import kl_div
 
 from .FRC_lib import radial_profile
 
@@ -433,3 +434,55 @@ def point_cloud_from_img(dset):
     point_cloud_matrix = np.column_stack((indices, values))
 
     return point_cloud_matrix
+
+
+def kl_divergence(ground_truth, reconstruction):
+    """
+    Calculates the Kullback-Leibler divergence for each iteration of the reconstruction
+
+    Parameters
+    ----------
+    ground_truth : np.ndarray
+        Reference image (Ny x Nx)
+    reconstruction : np.ndarray
+        Stack of reconstructed images (N_iter x Ny x Nx)
+
+    Returns
+    -------
+    kl : np.ndarray
+        KL divergence (N_iter)
+    """
+
+    n_iter = reconstruction.shape[0]
+
+    kl = np.empty(n_iter)
+
+    for n in range(n_iter):
+        kl[n] = kl_div(ground_truth, reconstruction[n]).sum()
+
+    return kl
+
+
+def normalized_absolute_difference(ground_truth, reconstruction):
+    """
+    Calculates the normalized absolute difference between two images
+
+    Parameters
+    ----------
+    ground_truth : np.ndarray
+        Reference image (Ny x Nx)
+    reconstruction : np.ndarray
+        Reconstructed images (Ny x Nx)
+
+    Returns
+    -------
+    error : float
+        Normalized absolute difference
+    """
+
+    tot_ref = ground_truth.sum()
+    tot_img = reconstruction.sum()
+
+    error = np.abs(reconstruction / tot_img - ground_truth / tot_ref)
+
+    return error
