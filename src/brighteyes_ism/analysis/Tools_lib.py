@@ -443,9 +443,9 @@ def kl_divergence(ground_truth, reconstruction):
     Parameters
     ----------
     ground_truth : np.ndarray
-        Reference image (Ny x Nx)
+        Reference image (Nz x Ny x Nx)
     reconstruction : np.ndarray
-        Stack of reconstructed images (N_iter x Ny x Nx)
+        Stack of reconstructed images (N_iter x Nz x Ny x Nx)
 
     Returns
     -------
@@ -453,12 +453,14 @@ def kl_divergence(ground_truth, reconstruction):
         KL divergence (N_iter)
     """
 
+    n_z = ground_truth.shape[0] if ground_truth.ndim > 2 else 1
     n_iter = reconstruction.shape[0]
-
-    kl = np.empty(n_iter)
+    kl = np.empty((n_iter, n_z))
 
     for n in range(n_iter):
-        kl[n] = kl_div(ground_truth, reconstruction[n]).sum()
+        kl[n] = kl_div(ground_truth, reconstruction[n]).sum(axis=(-2, -1))
+
+    kl = np.squeeze(kl.T)
 
     return kl
 
@@ -476,13 +478,13 @@ def normalized_absolute_difference(ground_truth, reconstruction):
 
     Returns
     -------
-    error : float
+    nad : float
         Normalized absolute difference
     """
 
     tot_ref = ground_truth.sum()
     tot_img = reconstruction.sum()
 
-    error = np.abs(reconstruction / tot_img - ground_truth / tot_ref)
+    nad = np.abs(reconstruction / tot_img - ground_truth / tot_ref)
 
-    return error
+    return nad
