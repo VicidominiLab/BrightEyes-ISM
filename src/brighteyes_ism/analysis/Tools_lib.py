@@ -499,7 +499,7 @@ def check_saturation(dset, sat_map = None):
     dset : np.ndarray
         ISM dataset. The channel dimension must be the last one.
     sat_map : np.ndarray
-        Saturation value for each channel (Nch)
+        Saturation value for each channel (Nch).
     """
 
     if sat_map is None:
@@ -515,9 +515,9 @@ def check_saturation(dset, sat_map = None):
     n_sat = np.empty(n_ch).astype('int')
     n_tot = np.size(dset[..., 0])
 
-    print('Saturation check: \n')
+    print('\nSaturated pixels: \n')
 
     for c in range(n_ch):
-        n_sat[c] = np.size( dset[..., c][dset[..., c] > sat_map[c]] )
+        n_sat[c] = np.size( dset[..., c][dset[..., c] == sat_map[c]] )
         percent = 100 * n_sat[c] / n_tot
         print(rf'Channel {c}: {n_sat[c]}/{n_tot} ({percent:.2f}%)')
