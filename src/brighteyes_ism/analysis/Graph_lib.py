@@ -5,7 +5,7 @@ from numbers import Number
 
 from matplotlib_scalebar.scalebar import ScaleBar
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from matplotlib.colors import Normalize
+from matplotlib.colors import Normalize, hsv_to_rgb
 import matplotlib.gridspec as gridspec
 
 import numbers
@@ -587,5 +587,139 @@ def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False,
                      rotation='vertical', transform=cax.transAxes)
         cbar.ax.text(0.6, 0.02, f'{vmin}', horizontalalignment='center', verticalalignment='bottom',
                      rotation='vertical', transform=cax.transAxes, color='white')
+
+    return fig, ax
+
+
+class ColorMap2D:
+
+    def __init__(self):
+        self.var_bounds = [None, None]  # minimum and maximum variable value of the colorbar
+        self.int_bounds = [None, None]  # minimum and maximum intensity value of the colorbar
+        self.invert_colormap = False  # colormap
+        self.out_of_bounds_hue = 0.8  # Hue to render the out of bounds pixels
+        self.sat_factor = 0.85  # The span of the Hue space
+
+    def image(self, intensity, variable):
+        '''
+
+        Parameters
+        ----------
+        intensity : TYPE
+            DESCRIPTION.
+        variable : TYPE
+            DESCRIPTION.
+        params : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        RGB : TYPE
+            DESCRIPTION.
+
+        '''
+
+        sz = intensity.shape
+
+        Hp = np.minimum(np.maximum(variable, self.var_bounds[0]), self.var_bounds[1])
+
+        # HSV representation
+        Hn = ((Hp - self.var_bounds[0]) / (self.var_bounds[1] - self.var_bounds[0])) * self.sat_factor
+        Sn = np.ones(Hp.shape)
+        Vn = (intensity - self.int_bounds[0]) / (self.int_bounds[1] - self.int_bounds[0])
+
+        HSV = np.empty((sz[0], sz[1], 3))
+
+        if self.invert_colormap == True:
+            Hn = self.sat_factor - Hn
+
+        # set to violet color of pixels outside bounds
+        Hn[np.not_equal(variable, Hp)] = self.out_of_bounds_hue
+
+        HSV[:, :, 0] = Hn.astype('float64')
+        HSV[:, :, 1] = Sn.astype('float64')
+        HSV[:, :, 2] = Vn.astype('float64')
+
+        # convert to RGB
+        RGB = hsv_to_rgb(HSV)
+
+        return RGB
+
+    def colorbar(self, N):
+        LG = np.linspace(self.var_bounds[0], self.var_bounds[1], num=N)
+        VarGradient = np.tile(LG, (N, 1))
+
+        IG = np.linspace(self.int_bounds[0], self.int_bounds[1], num=N)
+        IntensityGradient = np.transpose(np.tile(IG, (N, 1)))
+
+        RGB_colormap = self.image(IntensityGradient, VarGradient)
+        RGB_colormap = np.moveaxis(RGB_colormap, 0, 1)
+
+        return RGB_colormap
+
+
+def depth_stack(stack, pxsize, axis=0, satFactor=0.85, invertColormap=False):
+    '''
+    Display together the lifetime and depth images with a raninbow colormap.
+    Referring to the HSV color model:
+    Intensity values are mapped in Value
+    Depth values are mapped in Hue
+
+
+    Input parameters
+    intensityIm:        Pixel values are photon counts.
+    lifetimeIm:         Pixel values are lifetime values.
+
+    bounds_Tau
+        minVar:             minimum lifetime value of the colorbar
+        maxVar:             maximum lifetime value of the colorbar
+    bounds_Int
+        minInt:             minimum intensity value of the colorbar
+        maxInt:             maximum intensity value of the colorbar
+    invertColormap:     (False)
+    outOfBoundsHue:      Hue to render the out of bounds pixels (0.8)
+    satFactor:           The span of the Hue space (0.657)
+
+    '''
+
+    image_mip = stack.max(axis=axis)
+    depth_mip = stack.argmax(axis=axis) * pxsize[axis]
+
+    # params settings
+
+    cmap = ColorMap2D()
+
+    cmap.int_bounds = [np.min(image_mip), np.max(image_mip)]
+    cmap.var_bounds = [np.min(depth_mip), np.max(depth_mip)]
+
+    cmap.invert_colormap = invertColormap
+    cmap.sat_factor = satFactor
+
+    # Image
+
+    RGB = cmap.image(image_mip, depth_mip)
+
+    # Colorbar
+
+    N = image_mip.shape[axis]
+    RGB_colormap = cmap.colorbar(N)
+
+    # Show combined image with colorbar
+
+    extent = (cmap.int_bounds[0], cmap.int_bounds[1], cmap.var_bounds[0], cmap.var_bounds[1])
+
+    fig, ax = plt.subplots(1, 2)
+
+    ax[1].imshow(RGB)
+    ax[1].axis('off')
+
+    ax[0].imshow(RGB_colormap, origin='lower', aspect='auto', extent=extent)
+    ax[0].set_xticks([cmap.int_bounds[0], cmap.int_bounds[1]])
+    ax[0].set_xlabel('Counts')
+    ax[0].set_ylabel(r'Depth ($\mu m$)')  # mathregular?
+
+    ax[0].set_aspect(10 * cmap.int_bounds[1] / cmap.var_bounds[1])
+
+    plt.tight_layout()
 
     return fig, ax
