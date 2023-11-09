@@ -488,3 +488,36 @@ def normalized_absolute_difference(ground_truth, reconstruction):
     nad = np.abs(reconstruction / tot_img - ground_truth / tot_ref)
 
     return nad
+
+
+def check_saturation(dset, sat_map = None):
+    """
+    Checks each channel for saturation.
+
+    Parameters
+    ----------
+    dset : np.ndarray
+        ISM dataset. The channel dimension must be the last one.
+    sat_map : np.ndarray
+        Saturation value for each channel (Nch)
+    """
+
+    if sat_map is None:
+        sat_map = np.ones((5, 5)) * 4
+        sat_map[1:-1, 1:-1] = 5
+        sat_map[2, 1:-1] = 6
+        sat_map[1:-1, 2] = 6
+        sat_map[2, 2] = 10
+        sat_map = 2**sat_map - 1
+        sat_map = sat_map.flatten()
+
+    n_ch = dset.shape[-1]
+    n_sat = np.empty(n_ch).astype('int')
+    n_tot = np.size(dset[..., 0])
+
+    print('Saturation check: \n')
+
+    for c in range(n_ch):
+        n_sat[c] = np.size( dset[..., c][dset[..., c] > sat_map[c]] )
+        percent = 100 * n_sat[c] / n_tot
+        print(rf'Channel {c}: {n_sat[c]}/{n_tot} ({percent:.2f}%)')
