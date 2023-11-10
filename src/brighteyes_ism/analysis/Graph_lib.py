@@ -642,7 +642,7 @@ class ColorMap2D:
 
 def depth_stack(stack: np.ndarray, pxsize: list, pxdwelltime: float, axis: int = 0, sat_factor: float = 0.85,
                 invert_colormap: bool = False):
-    '''
+    """
     Display the maximum intensity projection of stack, where intensity and
     depth image are represented with a 2D colormap.
     Referring to the HSV color model:
@@ -666,11 +666,11 @@ def depth_stack(stack: np.ndarray, pxsize: list, pxdwelltime: float, axis: int =
 
     Returns
     -------
-    fig : plt.figure
+    fig : plt.Figure
         Figure that contains the image and the colormap.
     ax : plt.axis
         Axis array that contain the image and the colormap..
-    '''
+    """
 
     image_mip = stack.max(axis=axis)
     depth_mip = stack.argmax(axis=axis) * pxsize[axis]
