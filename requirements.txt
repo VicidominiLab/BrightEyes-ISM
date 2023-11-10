@@ -5,7 +5,7 @@ scikit-learn
 matplotlib
 joblib
 poppy
-PyCustomFocus==2.3
+PyCustomFocus==2.*
 tqdm
 h5py
 statsmodels

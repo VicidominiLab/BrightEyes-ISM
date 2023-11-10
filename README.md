@@ -48,7 +48,7 @@ It requires the following Python packages
 	scikit-image
     scikit-learn
 	poppy
-	PyCustomFocus==2.3
+	PyCustomFocus==2.*
     h5py
     tqdm
 	statsmodels
