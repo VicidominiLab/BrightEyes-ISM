@@ -29,7 +29,7 @@ def hann2d(shape: tuple):
     W = 0.5 * (1 - np.cos((2 * np.pi * X) / (Nx - 1)))
     W *= 0.5 * (1 - np.cos((2 * np.pi * Y) / (Ny - 1)))
 
-    return W
+    return W.T
 
 
 def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool = True, filter_sigma: float = 0,
