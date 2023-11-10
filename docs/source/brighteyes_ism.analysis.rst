@@ -14,3 +14,4 @@ analysis
    brighteyes_ism.analysis.FRC_lib
    brighteyes_ism.analysis.FocusISM_lib
    brighteyes_ism.analysis.Tools_lib
+   brighteyes_ism.analysis.Graph_lib
