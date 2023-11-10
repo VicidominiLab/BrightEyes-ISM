@@ -125,12 +125,12 @@ class metadata:
 
     @property
     def dz(self):
-        # array of pixel sizes in z, y, x directions
-        return []
+        # pixel size in z direction
+        return self.rangez / self.nz
 
     @property
     def pxszizes(self):
-        # Array pixel size in z direction
+        # List of pixel sizes in z, y, x directions
         return [self.dz, self.dy, self.dx]
 
     @property
