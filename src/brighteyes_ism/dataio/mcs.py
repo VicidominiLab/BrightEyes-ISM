@@ -1,5 +1,6 @@
 import h5py
 
+
 class metadata:
     """
     Object containing the metadata read from a mcs data file.
@@ -59,97 +60,102 @@ class metadata:
     Print():
         Prints all the metadata on screen (name and value).
     """
-    
+
     # __slots__ = ['version', 'comment', 'rangex', 'rangey', 'rangez', 'nbin', 'dt', 'nx', 'ny', 'nz', 'nrep', 'calib_x', 'calib_y', 'calib_z']
-    
+
     def __init__(self, f):
-            
+
         # MCS version
         self.version = f.attrs['data_format_version']
         try:
             self.comment = f.attrs['comment']
         except:
             self.comment = ''
-        
+
         # range in um
         self.rangex = f['configurationGUI'].attrs['range_x']
         self.rangey = f['configurationGUI'].attrs['range_y']
         self.rangez = f['configurationGUI'].attrs['range_z']
-        
+
         # number of time bins per pixel
         self.nbin = f['configurationGUI'].attrs['timebin_per_pixel']
-        
+
         # time resolution in us
         self.dt = f['configurationGUI'].attrs['time_resolution']
-        
+
         # number of pixels in x, y, z direction
         self.nx = f['configurationGUI'].attrs['nx']
         self.ny = f['configurationGUI'].attrs['ny']
         self.nz = f['configurationGUI'].attrs['nframe']
-        
+
         # number of repetitions
         self.nrep = f['configurationGUI'].attrs['nrep']
-        
+
         # calibration values
         self.calib_x = f['configurationGUI'].attrs['calib_x']
         self.calib_y = f['configurationGUI'].attrs['calib_y']
         self.calib_z = f['configurationGUI'].attrs['calib_z']
-            
+
     @property
     def pxdwelltime(self):
         # pixel dwell time in us
-        return(self.dt * self.nbin)
-    
+        return self.dt * self.nbin
+
     @property
     def frametime(self):
         # frame time in s
-        return(self.pxdwelltime * self.nx * self.ny / 1e6)
+        return self.pxdwelltime * self.nx * self.ny / 1e6
 
     @property
     def framerate(self):
         # frame rate in Hz
-        return(1 / self.frametime)
+        return 1 / self.frametime
 
     @property
     def dx(self):
         # pixel size in x direction
-        return(self.rangex / self.nx)
-    
+        return self.rangex / self.nx
+
     @property
     def dy(self):
         # pixel size in y direction
-        return(self.rangey / self.ny)
-    
+        return self.rangey / self.ny
+
     @property
     def dz(self):
-        # pixel size in z direction
-        return(self.rangez / self.nz)
-    
+        # array of pixel sizes in z, y, x directions
+        return []
+
+    @property
+    def pxszizes(self):
+        # Array pixel size in z direction
+        return [self.dz, self.dy, self.dx]
+
     @property
     def nmicroim(self):
         # total number of microimages read during the measurement
-        return(self.nx * self.ny * self.nz * self.nrep * self.nbin)
-    
+        return self.nx * self.ny * self.nz * self.nrep * self.nbin
+
     @property
     def ndatapoints(self):
         # total number of words transferred from low level to high level
         # 2 words per microimage
-        return(2 * self.nmicroim)
-    
+        return 2 * self.nmicroim
+
     @property
     def duration(self):
         # total measurement duration in s
-        return(self.nmicroim * self.dt * 1e-6)
-    
+        return self.nmicroim * self.dt * 1e-6
+
     def Print(self):
         dic = self.__dict__
         names = list(dic)
         values = list(dic.values())
         for n, name in enumerate(names):
-            print(name, end = '')
-            print(' ' * int(14 - len(name)), end = '')
+            print(name, end='')
+            print(' ' * int(14 - len(name)), end='')
             print(str(values[n]))
-            
+
 
 def metadata_load(fname: str):
     '''
@@ -166,7 +172,7 @@ def metadata_load(fname: str):
         MCS metadata of the dataset.
 
     '''
-    
+
     with h5py.File(fname, "r") as f:
         meta = metadata(f)
         return meta
@@ -186,12 +192,13 @@ def metadata_print(fname: str):
     None.
 
     '''
-    
+
     with h5py.File(fname, "r") as f:
         meta = metadata(f)
         meta.Print()
 
-def load(fname: str, key: str ='data'):
+
+def load(fname: str, key: str = 'data'):
     '''
     Return numpy array with image data from MCS .h5 file
 
