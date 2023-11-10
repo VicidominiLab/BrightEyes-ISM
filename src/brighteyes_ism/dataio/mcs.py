@@ -50,6 +50,8 @@ class metadata:
         Returns the y pixel size (um).
     dz : float
         Returns the z pixel size (um).
+    pxsizes : list
+        Returns the list of pixel sizes in the z, y, x dimensions (um).
     nmicroim : int
         <returns total number of microimages read during the measurement.
     ndatapoints : int
