@@ -601,24 +601,6 @@ class ColorMap2D:
         self.sat_factor = 0.85  # The span of the Hue space
 
     def image(self, intensity, variable):
-        '''
-
-        Parameters
-        ----------
-        intensity : TYPE
-            DESCRIPTION.
-        variable : TYPE
-            DESCRIPTION.
-        params : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        RGB : TYPE
-            DESCRIPTION.
-
-        '''
-
         sz = intensity.shape
 
         Hp = np.minimum(np.maximum(variable, self.var_bounds[0]), self.var_bounds[1])
@@ -658,28 +640,36 @@ class ColorMap2D:
         return RGB_colormap
 
 
-def depth_stack(stack, pxsize, axis=0, satFactor=0.85, invertColormap=False):
+def depth_stack(stack: np.ndarray, pxsize: list, pxdwelltime: float, axis: int = 0, sat_factor: float = 0.85,
+                invert_colormap: bool = False):
     '''
-    Display together the lifetime and depth images with a raninbow colormap.
+    Display the maximum intensity projection of stack, where intensity and
+    depth image are represented with a 2D colormap.
     Referring to the HSV color model:
     Intensity values are mapped in Value
     Depth values are mapped in Hue
 
+    Parameters
+    ----------
+    stack : np.ndarray
+        3D image (Nz x Ny x Nx).
+    pxsize : list
+        List of pixel size of each dimension, in um [px_z, px_y, px_x].
+    pxdwelltime : float
+        Pixel dwell time, in us.
+    axis : int, optional
+        Projection axis. The default is 0 (zeta).
+    sat_factor : float, optional
+        Span of the Hue space. The default is 0.85.
+    invert_colormap : bool, optional
+        If True, the Hue dimension is inverted. The default is False.
 
-    Input parameters
-    intensityIm:        Pixel values are photon counts.
-    lifetimeIm:         Pixel values are lifetime values.
-
-    bounds_Tau
-        minVar:             minimum lifetime value of the colorbar
-        maxVar:             maximum lifetime value of the colorbar
-    bounds_Int
-        minInt:             minimum intensity value of the colorbar
-        maxInt:             maximum intensity value of the colorbar
-    invertColormap:     (False)
-    outOfBoundsHue:      Hue to render the out of bounds pixels (0.8)
-    satFactor:           The span of the Hue space (0.657)
-
+    Returns
+    -------
+    fig : plt.figure
+        Figure that contains the image and the colormap.
+    ax : plt.axis
+        Axis array that contain the image and the colormap..
     '''
 
     image_mip = stack.max(axis=axis)
@@ -692,8 +682,8 @@ def depth_stack(stack, pxsize, axis=0, satFactor=0.85, invertColormap=False):
     cmap.int_bounds = [np.min(image_mip), np.max(image_mip)]
     cmap.var_bounds = [np.min(depth_mip), np.max(depth_mip)]
 
-    cmap.invert_colormap = invertColormap
-    cmap.sat_factor = satFactor
+    cmap.invert_colormap = invert_colormap
+    cmap.sat_factor = sat_factor
 
     # Image
 
@@ -701,24 +691,40 @@ def depth_stack(stack, pxsize, axis=0, satFactor=0.85, invertColormap=False):
 
     # Colorbar
 
-    N = image_mip.shape[axis]
+    N = stack.shape[axis]
     RGB_colormap = cmap.colorbar(N)
 
-    # Show combined image with colorbar
+    # Define extents
 
-    extent = (cmap.int_bounds[0], cmap.int_bounds[1], cmap.var_bounds[0], cmap.var_bounds[1])
+    sz = image_mip.shape
+    px = np.delete(pxsize, axis)
 
-    fig, ax = plt.subplots(1, 2)
+    img_extent = (0, sz[1] * px[1], 0, sz[0] * px[0])
+    cmap_extent = (cmap.int_bounds[0], cmap.int_bounds[1], cmap.var_bounds[0], cmap.var_bounds[1])
 
-    ax[1].imshow(RGB)
-    ax[1].axis('off')
+    # Show image with colorbar
 
-    ax[0].imshow(RGB_colormap, origin='lower', aspect='auto', extent=extent)
-    ax[0].set_xticks([cmap.int_bounds[0], cmap.int_bounds[1]])
-    ax[0].set_xlabel('Counts')
-    ax[0].set_ylabel(r'Depth ($\mu m$)')  # mathregular?
+    fig, ax = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 0.08]})
 
-    ax[0].set_aspect(10 * cmap.int_bounds[1] / cmap.var_bounds[1])
+    ax[0].imshow(RGB, extent=img_extent)
+    ax[0].axis('off')
+
+    ax[1].imshow(RGB_colormap, origin='lower', aspect='auto', extent=cmap_extent)
+    ax[1].set_xticks([cmap.int_bounds[0], cmap.int_bounds[1]])
+    ax[1].set_xlabel(f'Counts/{pxdwelltime} ' + '$\mathregular{\mu s}$')
+    ax[1].set_ylabel(r'Depth ($\mathregular{\mu m}$)')
+    ax[1].yaxis.tick_right()
+    ax[1].yaxis.set_label_position("right")
+
+    # Add scalebar
+
+    scalebar = ScaleBar(
+        1, "um",  # default, extent is calibrated in meters
+        box_alpha=0,
+        color='w',
+        length_fraction=0.25)
+
+    ax[0].add_artist(scalebar)
 
     plt.tight_layout()
 
