@@ -12,7 +12,7 @@ import numbers
 
 
 def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float = None, vmax: float = None,
-            fig: plt.Figure = None, ax: plt.axis = None, cmap: str = 'hot'):
+            fig: plt.Figure = None, ax: plt.axis = None, colorbar: bool = True, cmap: str = 'hot'):
     """
     It shows the input image with a scalebar and a colorbar.
     It returns the corresponding figure and axis.
@@ -39,6 +39,8 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float 
     ax : plt.axis, optional
         Axis where to display the plot. If None, a new axis is created.
         The default is None.
+    colormap : bool, optional
+        If True, a colormap is shown. The default is True.
     cmap : str, optional
         Colormap, to be chosen within the matplotlib list.
         The default is 'hot'.
@@ -55,35 +57,37 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float 
     if fig == None or ax == None:
         fig, ax = plt.subplots()
 
-    Nx, Ny = image.shape
-    rangex = Nx * pxsize_x
-    rangey = Nx * pxsize_x
-    extent = (-rangex/2, rangex/2, -rangey/2, rangey/2)
+    # Nx, Ny = image.shape
+    # rangex = Nx * pxsize_x
+    # rangey = Nx * pxsize_x
+    # extent = (-rangex/2, rangex/2, -rangey/2, rangey/2)
 
-    im = ax.imshow(image, vmin=vmin, vmax=vmax, cmap=cmap, extent=extent)
+    im = ax.imshow(image, vmin=vmin, vmax=vmax, cmap=cmap)#, extent=extent)
     ax.axis('off')
 
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="5%", pad=0.05)
-    cbar = fig.colorbar(im, cax=cax, ticks=[])
+    if colorbar==True:
 
-    vmax_text = int(np.floor(np.max(image)))
-    vmin_text = int(np.floor(np.min(image)))
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        cbar = fig.colorbar(im, cax=cax, ticks=[])
 
-    if isinstance(clabel, Number):
-        clabel_text = f'Counts / {clabel:.0f} ' + '$\mathregular{\mu s}$'
-    else:
-        clabel_text = clabel
+        vmax_text = int(np.floor(np.max(image)))
+        vmin_text = int(np.floor(np.min(image)))
 
-    cbar.ax.text(0.6, 0.5, clabel_text, horizontalalignment='center', verticalalignment='center',
-                 rotation='vertical', transform=cax.transAxes)
-    cbar.ax.text(0.6, 0.98, f'{vmax_text}', horizontalalignment='center', verticalalignment='top',
-                 rotation='vertical', transform=cax.transAxes)
-    cbar.ax.text(0.6, 0.02, f'{vmin_text}', horizontalalignment='center', verticalalignment='bottom',
-                 rotation='vertical', transform=cax.transAxes, color='white')
+        if isinstance(clabel, Number):
+            clabel_text = f'Counts / {clabel:.0f} ' + '$\mathregular{\mu s}$'
+        else:
+            clabel_text = clabel
+
+        cbar.ax.text(0.6, 0.5, clabel_text, horizontalalignment='center', verticalalignment='center',
+                     rotation='vertical', transform=cax.transAxes)
+        cbar.ax.text(0.6, 0.98, f'{vmax_text}', horizontalalignment='center', verticalalignment='top',
+                     rotation='vertical', transform=cax.transAxes)
+        cbar.ax.text(0.6, 0.02, f'{vmin_text}', horizontalalignment='center', verticalalignment='bottom',
+                     rotation='vertical', transform=cax.transAxes, color='white')
 
     scalebar = ScaleBar(
-        1, "um",  # default, extent is calibrated in meters
+        pxsize_x, "um",  # default, extent is calibrated in meters
         box_alpha=0,
         color='w',
         length_fraction=0.25)
@@ -594,10 +598,10 @@ def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False,
 class ColorMap2D:
 
     def __init__(self):
-        self.var_bounds = [None, None]  # minimum and maximum variable value of the colorbar
-        self.int_bounds = [None, None]  # minimum and maximum intensity value of the colorbar
+        self.var_bounds = [0, 1]  # minimum and maximum variable value of the colorbar
+        self.int_bounds = [0, 1]  # minimum and maximum intensity value of the colorbar
         self.invert_colormap = False  # colormap
-        self.out_of_bounds_hue = 0.8  # Hue to render the out of bounds pixels
+        self.out_of_bounds_hue = 0.8  # Hue to render the out-of-bounds pixels
         self.sat_factor = 0.85  # The span of the Hue space
 
     def image(self, intensity, variable):
@@ -627,12 +631,12 @@ class ColorMap2D:
 
         return RGB
 
-    def colorbar(self, N):
-        LG = np.linspace(self.var_bounds[0], self.var_bounds[1], num=N)
-        VarGradient = np.tile(LG, (N, 1))
+    def colorbar(self, n):
+        LG = np.linspace(self.var_bounds[0], self.var_bounds[1], num=n)
+        VarGradient = np.tile(LG, (n, 1))
 
-        IG = np.linspace(self.int_bounds[0], self.int_bounds[1], num=N)
-        IntensityGradient = np.transpose(np.tile(IG, (N, 1)))
+        IG = np.linspace(self.int_bounds[0], self.int_bounds[1], num=n)
+        IntensityGradient = np.transpose(np.tile(IG, (n, 1)))
 
         RGB_colormap = self.image(IntensityGradient, VarGradient)
         RGB_colormap = np.moveaxis(RGB_colormap, 0, 1)
