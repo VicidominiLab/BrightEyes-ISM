@@ -200,7 +200,7 @@ def metadata_print(fname: str):
         meta.Print()
 
 
-def load(fname: str, key: str = 'data'):
+def load(fname: str, key: str = 'data', data_format: str = 'numpy'):
     '''
     Return numpy array with image data from MCS .h5 file
 
@@ -210,6 +210,8 @@ def load(fname: str, key: str = 'data'):
         h5 file path.
     key : str, optional
         Key name of the stored data. The default is 'data'.
+    data_format : str, optional
+        Return the data either as numpy array ('numpy') or as h5 file ('h5'). The default is 'numpy'.
 
     Returns
     -------
@@ -223,4 +225,7 @@ def load(fname: str, key: str = 'data'):
     with h5py.File(fname, "r") as f:
         data = f[key]
         meta = metadata(f)
-        return data[:], meta
+        if data_format == 'numpy':
+            return data[:], meta
+        elif data_format == 'h5':
+            return data, meta
