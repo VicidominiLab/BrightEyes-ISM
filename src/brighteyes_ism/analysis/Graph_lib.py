@@ -10,7 +10,27 @@ import matplotlib.gridspec as gridspec
 
 import numbers
 
+#%%
 
+from matplotlib import cm
+from matplotlib.colors import ListedColormap
+
+_hot = cm.get_cmap('hot', 256)
+_hot_array = _hot(np.linspace(0, 1, 256))
+
+_bluehot = _hot_array.copy()
+_bluehot[:, 0] = _hot_array[:, 2]
+_bluehot[:, 2] = _hot_array[:, 0]
+
+bluehot = ListedColormap(_bluehot)
+
+_greenhot = _hot_array.copy()
+_greenhot[:, 0] = _hot_array[:, 1]
+_greenhot[:, 1] = _hot_array[:, 0]
+
+greenhot = ListedColormap(_greenhot)
+
+#%%
 def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float = None, vmax: float = None,
             fig: plt.Figure = None, ax: plt.axis = None, colorbar: bool = True, cmap: str = 'hot'):
     """
