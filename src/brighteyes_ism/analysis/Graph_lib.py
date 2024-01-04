@@ -54,7 +54,7 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float 
 
     """
 
-    if fig == None or ax == None:
+    if fig is None or ax is None:
         fig, ax = plt.subplots()
 
     # Nx, Ny = image.shape
