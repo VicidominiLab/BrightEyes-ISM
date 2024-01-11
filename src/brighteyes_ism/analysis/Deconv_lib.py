@@ -298,7 +298,7 @@ def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None,
     """
     
     if out == 'all':
-        sz = [max_iter, i.shape[0], i.shape[1]]
+        sz = [max_iter] + list(i.shape[:-1])
         obj_all = np.empty(sz)
     
     if bkg is None:
@@ -314,8 +314,11 @@ def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None,
        epsilon = np.finfo(float).eps
     
     h = h/np.sum(h) #PSF normalization
-    hT = np.flip(h, axis=(0,1))
-    obj = np.ones( i.shape[0:-1] ) #Initialization
+
+    axis_to_flip = range(len(i.shape)-1)
+    hT = np.flip(h, axis=axis_to_flip)
+
+    obj = np.ones(list(i.shape[:-1])) #Initialization
     
     k = 0
     print('Multi-image deconvolution:')
@@ -330,9 +333,9 @@ def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None,
         for n in range(N):
             with np.errstate(invalid='ignore', divide='ignore'):
                 
-                conv = convolve( obj, h[:, :, n], mode = 'same' ) + bkg[:,:,n]
-                A = np.where(conv < epsilon, 0, i[:, :, n] / conv)
-                B = convolve( A, hT[:, :, n], mode = 'same' )
+                conv = convolve( obj, h[..., n], mode = 'same' ) + bkg[..., n]
+                A = np.where(conv < epsilon, 0, i[..., n] / conv)
+                B = convolve( A, hT[..., n], mode = 'same' )
                 tmp += B
             
         obj = ( obj * tmp / ( 1 + reg * obj ) ) # * s[n]
