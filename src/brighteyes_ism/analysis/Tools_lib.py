@@ -328,8 +328,9 @@ def FWHM(x, y):
     index_max = np.argmax(y)
     x_low = np.interp(height_half_max, y[:index_max], x[:index_max])
     x_high = np.interp(height_half_max, np.flip(y[index_max:]), np.flip(x[index_max:]))
+    fwhm = x_high - x_low
 
-    return x_high - x_low
+    return fwhm, [x_low, x_high]
 
 
 def RadialSpectrum(img, pxsize: float = 1, normalize: bool = True):
