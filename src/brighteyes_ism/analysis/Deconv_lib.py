@@ -276,10 +276,10 @@ def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None,
 
     Parameters
     ----------
-    h : np.array(Nx x Ny x Nch)
-        PSFs of the system
-    i : np.array(Nx x Ny x Nch)
-        ISM dataset
+    h : np.array(Nz x Nx x Ny x Nch)
+        PSFs of the system. Nz is optional.
+    i : np.array(Nz x Nx x Ny x Nch)
+        ISM dataset. Nz is optional.
     max_iter : float
         Number of iterations
     pad : int
@@ -292,8 +292,8 @@ def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None,
     
     Returns
     -------
-    img_deconv : np.array(Nx x Ny)
-        Deconvolved image
+    img_deconv : np.array(max_iter x Nz x Nx x Ny)
+        Deconvolved image. max_iter and Nz are optional.
     
     """
     
