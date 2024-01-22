@@ -5,7 +5,7 @@ from numbers import Number
 
 from matplotlib_scalebar.scalebar import ScaleBar
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from matplotlib.colors import Normalize, hsv_to_rgb
+from matplotlib.colors import Normalize, hsv_to_rgb, LogNorm
 import matplotlib.gridspec as gridspec
 
 import numbers
@@ -32,7 +32,7 @@ greenhot = ListedColormap(_greenhot)
 
 #%%
 def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float = None, vmax: float = None,
-            fig: plt.Figure = None, ax: plt.axis = None, colorbar: bool = True, cmap: str = 'hot'):
+            fig: plt.Figure = None, ax: plt.axis = None, colorbar: bool = True, cmap: str = 'hot', log_scale: bool = False):
     """
     It shows the input image with a scalebar and a colorbar.
     It returns the corresponding figure and axis.
@@ -81,9 +81,16 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float 
     # rangex = Nx * pxsize_x
     # rangey = Nx * pxsize_x
     # extent = (-rangex/2, rangex/2, -rangey/2, rangey/2)
-
-    im = ax.imshow(image, vmin=vmin, vmax=vmax, cmap=cmap)#, extent=extent)
+    if log_scale == True:
+        im = ax.imshow(image, vmin=vmin, vmax=vmax, cmap=cmap, norm = LogNorm())
+    else:
+        im = ax.imshow(image, vmin=vmin, vmax=vmax, cmap=cmap)#, extent=extent)
     ax.axis('off')
+
+    if vmax is None:
+        vmax = np.max(image)
+    if vmin is None:
+        vmin = np.min(image)
 
     if colorbar==True:
 
@@ -91,8 +98,8 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float 
         cax = divider.append_axes("right", size="5%", pad=0.05)
         cbar = fig.colorbar(im, cax=cax, ticks=[])
 
-        vmax_text = int(np.floor(np.max(image)))
-        vmin_text = int(np.floor(np.min(image)))
+        vmax_text = int(np.floor(vmax))
+        vmin_text = int(np.floor(vmin))
 
         if isinstance(clabel, Number):
             clabel_text = f'Counts / {clabel:.0f} ' + '$\mathregular{\mu s}$'
