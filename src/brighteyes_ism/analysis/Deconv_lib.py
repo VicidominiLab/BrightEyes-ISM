@@ -578,12 +578,8 @@ def PadDataset(img, pad_width):
     
     """
     
-    pad = []
-    for i in range (img.ndim):
-        if i <2:
-            pad.append( [pad_width, pad_width] )
-        else:
-            pad.append( [0, 0] )
+    pad = [[pad_width, pad_width]] * (img.ndim - 1)
+    pad.append([0, 0])
             
     img_pad = np.pad(img, pad, mode='constant')
     
