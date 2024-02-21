@@ -671,6 +671,100 @@ class ColorMap2D:
         return RGB_colormap
 
 
+def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime: float, sat_factor: float = 0.85,
+                    invert_colormap: bool = False, lifetime_bounds: list = None):
+    """
+    Display the flim image, where intensity and
+    lifetime image are represented with a 2D colormap.
+    Referring to the HSV color model:
+    Intensity values are mapped in Value
+    Lifetime are mapped in Hue
+
+    Parameters
+    ----------
+    image : np.ndarray
+        2D intensity image (Ny x Nx).
+    lifetime : np.ndarray
+        2D lifetime map (Ny x Nx).
+    pxsize : list
+        List of pixel size of each dimension, in um [px_y, px_x].
+    pxdwelltime : float
+        Pixel dwell time, in us.
+    axis : int, optional
+        Projection axis. The default is 0 (zeta).
+    sat_factor : float, optional
+        Span of the Hue space. The default is 0.85.
+    invert_colormap : bool, optional
+        If True, the Hue dimension is inverted. The default is False.
+
+    Returns
+    -------
+    fig : plt.Figure
+        Figure that contains the image and the colormap.
+    ax : plt.axis
+        Axis array that contain the image and the colormap..
+    """
+
+    # params settings
+
+    cmap = ColorMap2D()
+
+    cmap.int_bounds = [np.min(image), np.max(image)]
+
+    if lifetime_bounds is None:
+        cmap.var_bounds = [np.min(lifetime), np.max(lifetime)]
+    else:
+        cmap.var_bounds = lifetime_bounds
+
+    cmap.invert_colormap = invert_colormap
+    cmap.sat_factor = sat_factor
+
+    # Image
+
+    RGB = cmap.image(image, lifetime)
+
+    # Colorbar
+
+    N = 256 # to check
+    RGB_colormap = cmap.colorbar(N)
+
+    # Define extents
+
+    sz = image.shape
+    px = pxsize
+
+    img_extent = (0, sz[1] * px[1], 0, sz[0] * px[0])
+    cmap_extent = (cmap.int_bounds[0], cmap.int_bounds[1], cmap.var_bounds[0], cmap.var_bounds[1])
+
+    # Show image with colorbar
+
+    fig, ax = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 0.08]})
+
+    ax[0].imshow(RGB, extent=img_extent)
+    ax[0].axis('off')
+
+    ax[1].imshow(RGB_colormap, origin='lower', aspect='auto', extent=cmap_extent)
+    ax[1].set_xticks([cmap.int_bounds[0], cmap.int_bounds[1]])
+    ax[1].set_xlabel(f'Counts/{pxdwelltime} ' + '$\mathregular{\mu s}$')
+    ax[1].set_ylabel(r'Depth ($\mathregular{\mu m}$)')
+    ax[1].yaxis.tick_right()
+    ax[1].yaxis.set_label_position("right")
+
+    # Add scalebar
+
+    scalebar = ScaleBar(
+        1, "um",  # default, extent is calibrated in meters
+        box_alpha=0,
+        color='w',
+        length_fraction=0.25)
+
+    ax[0].add_artist(scalebar)
+
+    plt.tight_layout()
+
+    return fig, ax
+
+
 def depth_stack(stack: np.ndarray, pxsize: list, pxdwelltime: float, axis: int = 0, sat_factor: float = 0.85,
                 invert_colormap: bool = False):
     """
