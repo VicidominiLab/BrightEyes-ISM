@@ -672,13 +672,14 @@ class ColorMap2D:
 
 
 def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime: float, sat_factor: float = 0.85,
-                    invert_colormap: bool = False, lifetime_bounds: list = None):
+              invert_colormap: bool = False, lifetime_bounds: list = None):
+
     """
     Display the flim image, where intensity and
     lifetime image are represented with a 2D colormap.
     Referring to the HSV color model:
     Intensity values are mapped in Value
-    Lifetime are mapped in Hue
+    Lifetime values are mapped in Hue
 
     Parameters
     ----------
@@ -690,12 +691,11 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
         List of pixel size of each dimension, in um [px_y, px_x].
     pxdwelltime : float
         Pixel dwell time, in us.
-    axis : int, optional
-        Projection axis. The default is 0 (zeta).
     sat_factor : float, optional
         Span of the Hue space. The default is 0.85.
     invert_colormap : bool, optional
         If True, the Hue dimension is inverted. The default is False.
+    lifetime_bounds : list, optional
 
     Returns
     -------
