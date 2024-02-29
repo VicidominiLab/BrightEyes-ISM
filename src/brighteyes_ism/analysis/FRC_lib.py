@@ -1,5 +1,5 @@
 import numpy as np
-from scipy import pi
+from numpy import pi
 import matplotlib.pyplot as plt
 import scipy.fft as ft
 from statsmodels.nonparametric.smoothers_lowess import lowess
