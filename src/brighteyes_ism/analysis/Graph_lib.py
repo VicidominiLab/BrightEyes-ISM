@@ -672,7 +672,7 @@ class ColorMap2D:
 
 
 def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime: float, sat_factor: float = 0.85,
-              invert_colormap: bool = False, lifetime_bounds: list = None):
+              invert_colormap: bool = False, lifetime_bounds: list = None, intensity_bounds: list = None):
 
     """
     Display the flim image, where intensity and
@@ -688,7 +688,7 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
     lifetime : np.ndarray
         2D lifetime map (Ny x Nx).
     pxsize : list
-        List of pixel size of each dimension, in um [px_y, px_x].
+        Lateral pixel size, in um.
     pxdwelltime : float
         Pixel dwell time, in us.
     sat_factor : float, optional
@@ -696,6 +696,9 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
     invert_colormap : bool, optional
         If True, the Hue dimension is inverted. The default is False.
     lifetime_bounds : list, optional
+        Lifetime bounds of the colormap
+    intensity_bounds : list, optional
+        Intensity bounds of the colormap
 
     Returns
     -------
@@ -709,7 +712,10 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
 
     cmap = ColorMap2D()
 
-    cmap.int_bounds = [np.min(image), np.max(image)]
+    if intensity_bounds is None:
+        cmap.int_bounds = [np.min(image), np.max(image)]
+    else:
+        cmap.int_bounds = intensity_bounds
 
     if lifetime_bounds is None:
         cmap.var_bounds = [np.min(lifetime), np.max(lifetime)]
@@ -731,9 +737,8 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
     # Define extents
 
     sz = image.shape
-    px = pxsize
 
-    img_extent = (0, sz[1] * px[1], 0, sz[0] * px[0])
+    img_extent = (0, sz[1] * pxsize, 0, sz[0] * pxsize)
     cmap_extent = (cmap.int_bounds[0], cmap.int_bounds[1], cmap.var_bounds[0], cmap.var_bounds[1])
 
     # Show image with colorbar
@@ -746,7 +751,7 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
     ax[1].imshow(RGB_colormap, origin='lower', aspect='auto', extent=cmap_extent)
     ax[1].set_xticks([cmap.int_bounds[0], cmap.int_bounds[1]])
     ax[1].set_xlabel(f'Counts/{pxdwelltime} ' + '$\mathregular{\mu s}$')
-    ax[1].set_ylabel(r'Depth ($\mathregular{\mu m}$)')
+    ax[1].set_ylabel(r'Lifetime (ns)')
     ax[1].yaxis.tick_right()
     ax[1].yaxis.set_label_position("right")
 
