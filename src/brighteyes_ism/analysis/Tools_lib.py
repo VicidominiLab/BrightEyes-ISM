@@ -522,3 +522,94 @@ def check_saturation(dset, sat_map = None):
         n_sat[c] = np.size( dset[..., c][dset[..., c] == sat_map[c]] )
         percent = 100 * n_sat[c] / n_tot
         print(rf'Channel {c:02d}: {n_sat[c]}/{n_tot} ({percent:.2f} %)')
+
+
+def GaussMultVar(X, Y, M1, M2):
+    """
+    Multivariate Gaussian function.
+
+    Parameters
+    ----------
+    X: np.ndarray
+        X axis.
+    Y : np.ndarray
+        Y axis.
+    M1: np.ndarray
+        First momentum of the distribution (average)
+    M2: np.ndarray
+        Second momentum of the distribution (variance matrix)
+
+    Returns
+    -------
+    g : np.ndarray
+        Image of the multivariate Gaussian function
+    """
+
+    from numpy.linalg import inv
+
+    S = np.asarray([X, Y])
+    S = np.moveaxis(S, 0, 2) - M1
+
+    A = inv(M2)
+
+    B = np.einsum('ij, lmj -> ilm', A, S)
+    C = np.einsum('ijk, kij -> ij', S, B)
+
+    g = np.exp(- 0.5 * C)
+
+    return g
+
+
+def fit_to_gaussian(img, pxsize, p0=(0, 0, 800, 0, 800, 100)):
+    """
+    Fit an image to a multivariate Gaussian function
+
+    Parameters
+    ----------
+    img: np.ndarray
+        2D image.
+    pxsize : float
+        Size of the pixe of the image.
+    p0: tuple
+        Starting parameters for the fitting.
+        The first two are the elements of M1.
+        The next three are the elements of M2.
+        The last one is the amplitude.
+
+    Returns
+    -------
+    img_fit : np.ndarray
+        Image of the result of the fit.
+    sigma_matrix_diag: np.ndarray
+        Square root of the diagonalized variance matrix.
+    popt : np.ndarray
+        Array of the fitted parameters.
+    """
+
+    import scipy.optimize as opt
+    from numpy.linalg import eig
+
+    sz = img.shape
+
+    y = pxsize * (np.arange(sz[0]) - sz[0] // 2)
+    x = pxsize * (np.arange(sz[1]) - sz[1] // 2)
+
+    X, Y = np.meshgrid(x, y)
+
+    fit_model = lambda xdata, a, b, c, d, e, f: f * GaussMultVar(xdata[0].reshape(sz), xdata[1].reshape(sz),
+                                                                 np.asarray([a, b]),
+                                                                 np.asarray([[c, d], [d, e]])).ravel()
+
+    xdata = np.vstack((X.ravel(), Y.ravel()))
+
+    popt, pcov = opt.curve_fit(fit_model, xdata, img.ravel(), p0)
+
+    img_fit = fit_model(xdata, *popt).reshape(sz)
+
+    var_matrix = np.asarray([[popt[2], popt[3]], [popt[3], popt[4]]])
+    var_matrix_diag = np.diag(eig(var_matrix)[0])
+    sigma_matrix_diag = np.sqrt(var_matrix_diag)
+
+    # D4sigma = 4 * np.sqrt(sigma_matrix_diag) / 1e3
+
+    return img_fit, sigma_matrix_diag, popt
