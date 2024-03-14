@@ -560,7 +560,7 @@ def GaussMultVar(X, Y, M1, M2):
     return g
 
 
-def fit_to_gaussian(img, pxsize, p0=(0, 0, 800, 0, 800, 100)):
+def fit_to_gaussian(img, pxsize, baseline=False, p0 = None):
     """
     Fit an image to a multivariate Gaussian function
 
@@ -570,11 +570,14 @@ def fit_to_gaussian(img, pxsize, p0=(0, 0, 800, 0, 800, 100)):
         2D image.
     pxsize : float
         Size of the pixe of the image.
+    baseline : bool
+        If True, the fit model adds to a constant baseline.
     p0: tuple
         Starting parameters for the fitting.
-        The first two are the elements of M1.
-        The next three are the elements of M2.
-        The last one is the amplitude.
+        The first two are the elements of the first moment vector.
+        The next three are the elements of the second moment matrix.
+        The next one is the amplitude.
+        If next one is the baseline value (to be used only is baseline is True).
 
     Returns
     -------
@@ -596,9 +599,18 @@ def fit_to_gaussian(img, pxsize, p0=(0, 0, 800, 0, 800, 100)):
 
     X, Y = np.meshgrid(x, y)
 
-    fit_model = lambda xdata, a, b, c, d, e, f: f * GaussMultVar(xdata[0].reshape(sz), xdata[1].reshape(sz),
+    if baseline is False:
+        if p0 is None:
+            p0 = (0, 0, 1000, 0, 1000, 1)
+        fit_model = lambda xdata, a, b, c, d, e, f: f * GaussMultVar(xdata[0].reshape(sz), xdata[1].reshape(sz),
                                                                  np.asarray([a, b]),
                                                                  np.asarray([[c, d], [d, e]])).ravel()
+    elif baseline is True:
+        if p0 is None:
+            p0 = (0, 0, 1000, 0, 1000, 1, 0)
+        fit_model = lambda xdata, a, b, c, d, e, f, g: g + f * GaussMultVar(xdata[0].reshape(sz), xdata[1].reshape(sz),
+                                                                            np.asarray([a, b]),
+                                                                            np.asarray([[c, d], [d, e]])).ravel()
 
     xdata = np.vstack((X.ravel(), Y.ravel()))
 
