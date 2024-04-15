@@ -672,7 +672,7 @@ class ColorMap2D:
 
 
 def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime: float, sat_factor: float = 0.85,
-              invert_colormap: bool = False, lifetime_bounds: list = None, intensity_bounds: list = None):
+              invert_colormap: bool = False, lifetime_bounds: list = None, intensity_bounds: list = None, fig = None, ax = None):
 
     """
     Display the flim image, where intensity and
@@ -699,6 +699,12 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
         Lifetime bounds of the colormap
     intensity_bounds : list, optional
         Intensity bounds of the colormap
+    fig : plt.Figure, optional
+        Figure where to display the plot. If None, a new figure is created.
+        The default is None.
+    ax : plt.axis, optional
+        Axis where to display the plot. If None, a new axis is created.
+        The default is None.
 
     Returns
     -------
@@ -743,17 +749,21 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
 
     # Show image with colorbar
 
-    fig, ax = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 0.08]})
+    if fig is None or ax is None:
+        fig, ax = plt.subplots()
 
-    ax[0].imshow(RGB, extent=img_extent)
-    ax[0].axis('off')
-
-    ax[1].imshow(RGB_colormap, origin='lower', aspect='auto', extent=cmap_extent)
-    ax[1].set_xticks([cmap.int_bounds[0], cmap.int_bounds[1]])
-    ax[1].set_xlabel(f'Counts/{pxdwelltime} ' + '$\mathregular{\mu s}$')
-    ax[1].set_ylabel(r'Lifetime (ns)')
-    ax[1].yaxis.tick_right()
-    ax[1].yaxis.set_label_position("right")
+    ax.imshow(RGB, extent=img_extent)
+    ax.axis('off')
+    
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    
+    cax.imshow(RGB_colormap, origin='lower', aspect='auto', extent=cmap_extent)
+    cax.set_xticks([int(cmap.int_bounds[0]), int(cmap.int_bounds[1])])
+    cax.set_xlabel(f'Counts/{pxdwelltime} ' + '$\mathregular{\mu s}$')
+    cax.set_ylabel(r'Lifetime (ns)')
+    cax.yaxis.tick_right()
+    cax.yaxis.set_label_position("right")
 
     # Add scalebar
 
@@ -763,7 +773,7 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
         color='w',
         length_fraction=0.25)
 
-    ax[0].add_artist(scalebar)
+    ax.add_artist(scalebar)
 
     plt.tight_layout()
 
@@ -771,7 +781,7 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
 
 
 def depth_stack(stack: np.ndarray, pxsize: list, pxdwelltime: float, axis: int = 0, sat_factor: float = 0.85,
-                invert_colormap: bool = False):
+                invert_colormap: bool = False, fig = None, ax = None):
     """
     Display the maximum intensity projection of stack, where intensity and
     depth image are represented with a 2D colormap.
@@ -793,6 +803,12 @@ def depth_stack(stack: np.ndarray, pxsize: list, pxdwelltime: float, axis: int =
         Span of the Hue space. The default is 0.85.
     invert_colormap : bool, optional
         If True, the Hue dimension is inverted. The default is False.
+    fig : plt.Figure, optional
+        Figure where to display the plot. If None, a new figure is created.
+        The default is None.
+    ax : plt.axis, optional
+        Axis where to display the plot. If None, a new axis is created.
+        The default is None.
 
     Returns
     -------
@@ -834,17 +850,21 @@ def depth_stack(stack: np.ndarray, pxsize: list, pxdwelltime: float, axis: int =
 
     # Show image with colorbar
 
-    fig, ax = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 0.08]})
+    if fig is None or ax is None:
+        fig, ax = plt.subplots()
 
-    ax[0].imshow(RGB, extent=img_extent)
-    ax[0].axis('off')
+    ax.imshow(RGB, extent=img_extent)
+    ax.axis('off')
 
-    ax[1].imshow(RGB_colormap, origin='lower', aspect='auto', extent=cmap_extent)
-    ax[1].set_xticks([cmap.int_bounds[0], cmap.int_bounds[1]])
-    ax[1].set_xlabel(f'Counts/{pxdwelltime} ' + '$\mathregular{\mu s}$')
-    ax[1].set_ylabel(r'Depth ($\mathregular{\mu m}$)')
-    ax[1].yaxis.tick_right()
-    ax[1].yaxis.set_label_position("right")
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+
+    cax.imshow(RGB_colormap, origin='lower', aspect='auto', extent=cmap_extent)
+    cax.set_xticks([int(cmap.int_bounds[0]), int(cmap.int_bounds[1])])
+    cax.set_xlabel(f'Counts/{pxdwelltime} ' + '$\mathregular{\mu s}$')
+    cax.set_ylabel(r'Depth ($\mathregular{\mu m}$)')
+    cax.yaxis.tick_right()
+    cax.yaxis.set_label_position("right")
 
     # Add scalebar
 
