@@ -627,36 +627,38 @@ class ColorMap2D:
     def __init__(self):
         self.var_bounds = [0, 1]  # minimum and maximum variable value of the colorbar
         self.int_bounds = [0, 1]  # minimum and maximum intensity value of the colorbar
-        self.invert_colormap = False  # colormap
-        self.out_of_bounds_hue = 0.8  # Hue to render the out-of-bounds pixels
-        self.sat_factor = 0.85  # The span of the Hue space
+        self.equalize = True
+        self.colormap = 'rainbow'
 
-    def image(self, intensity, variable):
-        sz = intensity.shape
+    def image(self, intensity_map, variable_map):
+        output = np.zeros(intensity_map.shape + (3,))
 
-        Hp = np.minimum(np.maximum(variable, self.var_bounds[0]), self.var_bounds[1])
+        intensity = np.clip(intensity_map, self.int_bounds[0], self.int_bounds[1])
+        intensity = (intensity - self.int_bounds[0]) / (self.int_bounds[1] - self.int_bounds[0])
 
-        # HSV representation
-        Hn = ((Hp - self.var_bounds[0]) / (self.var_bounds[1] - self.var_bounds[0])) * self.sat_factor
-        Sn = np.ones(Hp.shape)
-        Vn = (intensity - self.int_bounds[0]) / (self.int_bounds[1] - self.int_bounds[0])
+        cmap = plt.get_cmap(self.colormap)
+        N = cmap.N
+        cmapArray = np.zeros((N, 3))
 
-        HSV = np.empty((sz[0], sz[1], 3))
+        for i in range(N):
+            cmapArray[i, :] = cmap(i)[0:3]
 
-        if self.invert_colormap == True:
-            Hn = self.sat_factor - Hn
+        # equalize luminescence
+        if self.equalize:
+            lmax = np.max((299 * cmapArray[:, 0] + 587 * cmapArray[:, 1] + 114 * cmapArray[:, 2]) / 1000)
+            for i in range(N):
+                lum = (299 * cmapArray[i, 0] + 587 * cmapArray[i, 1] + 114 * cmapArray[i, 2]) / 1000
+                lumfactor = np.min((lmax / lum, 1 / np.max(cmapArray[i, :])))
+                cmapArray[i, :] *= lumfactor
 
-        # set to violet color of pixels outside bounds
-        Hn[np.not_equal(variable, Hp)] = self.out_of_bounds_hue
+        # get index of color map for lifetime
+        variable = np.clip(variable_map, self.var_bounds[0], self.var_bounds[1])
+        idx = (np.floor((variable - self.var_bounds[0]) / (self.var_bounds[1] - self.var_bounds[0]) * N)).astype(int)
+        idx = np.clip(idx, 0, N - 1)
+        for k in range(3):
+            output[:, :, k] = np.take(cmapArray[:, k], idx) * intensity
 
-        HSV[:, :, 0] = Hn.astype('float64')
-        HSV[:, :, 1] = Sn.astype('float64')
-        HSV[:, :, 2] = Vn.astype('float64')
-
-        # convert to RGB
-        RGB = hsv_to_rgb(HSV)
-
-        return RGB
+        return output
 
     def colorbar(self, n):
         LG = np.linspace(self.var_bounds[0], self.var_bounds[1], num=n)
@@ -671,9 +673,8 @@ class ColorMap2D:
         return RGB_colormap
 
 
-def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime: float, sat_factor: float = 0.85,
-              invert_colormap: bool = False, lifetime_bounds: list = None, intensity_bounds: list = None, fig = None, ax = None):
-
+def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime: float, lifetime_bounds: list = None,
+              intensity_bounds: list = None, colormap='gist_rainbow', fig=None, ax=None):
     """
     Display the flim image, where intensity and
     lifetime image are represented with a 2D colormap.
@@ -691,14 +692,13 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
         Lateral pixel size, in um.
     pxdwelltime : float
         Pixel dwell time, in us.
-    sat_factor : float, optional
-        Span of the Hue space. The default is 0.85.
-    invert_colormap : bool, optional
-        If True, the Hue dimension is inverted. The default is False.
     lifetime_bounds : list, optional
         Lifetime bounds of the colormap
     intensity_bounds : list, optional
         Intensity bounds of the colormap
+    colormap : str, optional
+        Matplotlib colormap used to represent lifetime values.
+        The default is 'rainbow'
     fig : plt.Figure, optional
         Figure where to display the plot. If None, a new figure is created.
         The default is None.
@@ -717,6 +717,7 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
     # params settings
 
     cmap = ColorMap2D()
+    cmap.colormap = colormap
 
     if intensity_bounds is None:
         cmap.int_bounds = [np.min(image), np.max(image)]
@@ -728,16 +729,13 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
     else:
         cmap.var_bounds = lifetime_bounds
 
-    cmap.invert_colormap = invert_colormap
-    cmap.sat_factor = sat_factor
-
     # Image
 
     RGB = cmap.image(image, lifetime)
 
     # Colorbar
 
-    N = 256 # to check
+    N = 256
     RGB_colormap = cmap.colorbar(N)
 
     # Define extents
@@ -754,10 +752,10 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
 
     ax.imshow(RGB, extent=img_extent)
     ax.axis('off')
-    
+
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
-    
+
     cax.imshow(RGB_colormap, origin='lower', aspect='auto', extent=cmap_extent)
     cax.set_xticks([int(cmap.int_bounds[0]), int(cmap.int_bounds[1])])
     cax.set_xlabel(f'Counts/{pxdwelltime} ' + '$\mathregular{\mu s}$')
@@ -780,8 +778,8 @@ def show_flim(image: np.ndarray, lifetime: np.ndarray, pxsize: list, pxdwelltime
     return fig, ax
 
 
-def depth_stack(stack: np.ndarray, pxsize: list, pxdwelltime: float, axis: int = 0, sat_factor: float = 0.85,
-                invert_colormap: bool = False, fig = None, ax = None):
+def depth_stack(stack: np.ndarray, pxsize: list, pxdwelltime: float, axis: int = 0, colormap='rainbow', fig=None,
+                ax=None):
     """
     Display the maximum intensity projection of stack, where intensity and
     depth image are represented with a 2D colormap.
@@ -799,10 +797,9 @@ def depth_stack(stack: np.ndarray, pxsize: list, pxdwelltime: float, axis: int =
         Pixel dwell time, in us.
     axis : int, optional
         Projection axis. The default is 0 (zeta).
-    sat_factor : float, optional
-        Span of the Hue space. The default is 0.85.
-    invert_colormap : bool, optional
-        If True, the Hue dimension is inverted. The default is False.
+    colormap : str, optional
+        Matplotlib colormap used to represent lifetime values.
+        The default is 'rainbow'
     fig : plt.Figure, optional
         Figure where to display the plot. If None, a new figure is created.
         The default is None.
@@ -824,12 +821,10 @@ def depth_stack(stack: np.ndarray, pxsize: list, pxdwelltime: float, axis: int =
     # params settings
 
     cmap = ColorMap2D()
+    cmap.colormap = colormap
 
     cmap.int_bounds = [np.min(image_mip), np.max(image_mip)]
     cmap.var_bounds = [np.min(depth_mip), np.max(depth_mip)]
-
-    cmap.invert_colormap = invert_colormap
-    cmap.sat_factor = sat_factor
 
     # Image
 
