@@ -32,7 +32,7 @@ greenhot = ListedColormap(_greenhot)
 
 #%%
 def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float = None, vmax: float = None,
-            fig: plt.Figure = None, ax: plt.axis = None, colorbar: bool = True, cmap: str = 'hot', log_scale: bool = False):
+            fig: plt.Figure = None, ax: plt.axis = None, colorbar: bool = True, cmap: str = 'hot', integer_values = True, log_scale: bool = False):
     """
     It shows the input image with a scalebar and a colorbar.
     It returns the corresponding figure and axis.
@@ -97,9 +97,13 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float 
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         cbar = fig.colorbar(im, cax=cax, ticks=[])
-
-        vmax_text = int(np.floor(vmax))
-        vmin_text = int(np.floor(vmin))
+        
+        if integer_values == True:
+            vmax_text = int(np.floor(vmax))
+            vmin_text = int(np.floor(vmin))
+        else:
+            vmax_text = np.round(vmax, 3)
+            vmin_text = np.round(vmin, 3)
 
         if isinstance(clabel, Number):
             clabel_text = f'Counts / {clabel:.0f} ' + '$\mathregular{\mu s}$'
