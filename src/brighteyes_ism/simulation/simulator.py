@@ -22,7 +22,7 @@ class ImageSimulator:
             for c in range(sz[-1]):
                 self.image = convolve(self.psf[..., c], gt, mode='same')
         elif num_ch == 0:
-            self.image = convolve(self.psf, gt)
+            self.image = convolve(self.psf, gt, mode='same')
         else:
             raise Exception("The PSF has less dimensions than the phantom.")
 
