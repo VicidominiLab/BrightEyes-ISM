@@ -20,7 +20,7 @@ class ImageSimulator:
 
         if num_ch == 1:
             for c in range(sz[-1]):
-                self.image = convolve(self.psf[..., c], gt)
+                self.image = convolve(self.psf[..., c], gt, mode='same')
         elif num_ch == 0:
             self.image = convolve(self.psf, gt)
         else:
