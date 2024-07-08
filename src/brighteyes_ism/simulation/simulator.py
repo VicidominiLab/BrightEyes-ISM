@@ -7,6 +7,7 @@ class ImageSimulator:
 
     def __init__(self, phantom=None, psf=None, signal=1):
         self.image = None
+        self.clean_image = None
         self.phantom = phantom
         self.psf = psf
         self.signal = signal
@@ -16,18 +17,18 @@ class ImageSimulator:
         num_ch = np.ndim(self.psf) - np.ndim(self.phantom)
         sz = self.psf.shape
 
-        self.image = np.empty_like(self.psf)
+        self.clean_image = np.empty_like(self.psf)
 
         if num_ch == 1:
             for c in range(sz[-1]):
-                self.image = convolve(self.psf[..., c], gt, mode='same')
+                self.clean_image = convolve(self.psf[..., c], gt, mode='same')
         elif num_ch == 0:
-            self.image = convolve(self.psf, gt, mode='same')
+            self.clean_image = convolve(self.psf, gt, mode='same')
         else:
             raise Exception("The PSF has less dimensions than the phantom.")
 
     def poisson_noise(self):
-        self.image = np.random.poisson(self.image)
+        self.image = np.random.poisson(self.clean_image)
 
     def forward(self):
         self.blur()
