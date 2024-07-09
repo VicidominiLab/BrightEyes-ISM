@@ -21,7 +21,7 @@ class ImageSimulator:
 
         if num_ch == 1:
             for c in range(sz[-1]):
-                self.clean_image = convolve(self.psf[..., c], gt, mode='same')
+                self.clean_image[..., c] = convolve(self.psf[..., c], gt, mode='same')
         elif num_ch == 0:
             self.clean_image = convolve(self.psf, gt, mode='same')
         else:
