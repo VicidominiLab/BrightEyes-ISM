@@ -7,7 +7,7 @@ class ImageSimulator:
     """
     Object with methods to generate the forward model of a (multi-channel) microscope.
     The number of dimensions of phantom and the psf should differ by 1 at most.
-    In this case, the last dimension of the psd is interpreted as the channel.
+    In this case, the last dimension of the psf is interpreted as the channel.
 
     Attributes
     ----------
