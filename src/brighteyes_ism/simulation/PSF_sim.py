@@ -4,8 +4,9 @@ from skimage.transform import rotate
 from PyFocus.custom_mask_functions import generate_incident_field, custom_mask_focus_field_XY, plot_in_cartesian
 from poppy.zernike import noll_indices, R, zern_name
 import copy as cp
-
 from tqdm import tqdm
+
+from .detector import custom_detector
 
 #%% Zernike
 
@@ -99,10 +100,13 @@ class GridParameters:
         self.Nz = Nz  # number of axial planes
         self.pxpitch = pxpitch  # nm - spad array pixel pitch (real space)
         self.pxdim = pxdim  # nm - spad pixel size (real space) 57.3e-3 for cooled spad
+        self.pinhole_shape = 'square'  # 'square', 'cirle', or 'hexagon'
+        self.geometry = 'rect'  # Pinholes arrangement: 'rect' or 'hex'
         self.N = N  # number of pixels in the detector in each dimension (5x5 typically)
         self.M = M  # overall magnification of the system
         self.rotation = 0  # rototion angle of the detector array (rad)
         self.mirroring = 1  # flip of the x_d axis (+/- 1)
+        self.name = None
 
     @property
     def rangex(self):
@@ -424,12 +428,12 @@ def Pinholes(gridPar):
         Pixel pitch of the detector [nm] (real space, typically 75000)
     pxdim : float
         Detector element size [nm] (real space, typically 50000)
-    
+
     Returns
     -------
     p : np.array(Nx x Nx x N**2)
         array with the pinholes of each detector element
-    
+
     """
 
     if np.ndim(gridPar.N) == 0:
@@ -459,7 +463,7 @@ def Pinholes(gridPar):
             xmin = np.max((startcoord_x+dx*stepDet, 0))
             xmax = np.max((startcoord_x+dx*stepDet+sizeDet, 0))
             p[ymin:ymax, xmin:xmax, i] = 1
-            i += 1    
+            i += 1
 
     return p
 
