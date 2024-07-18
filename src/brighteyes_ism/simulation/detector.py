@@ -2,6 +2,7 @@ import numpy as np
 from scipy.signal import convolve
 from skimage.draw import polygon
 
+
 def circle(n, radius):
     x = np.arange(-(n // 2), n // 2 + 1)
 
