@@ -410,62 +410,6 @@ def PSFs2D(exPar, emPar, pxsizex, Nx, z_shift = 0, return_entrance_field = False
     
         return ex_PSF, em_PSF
 
-def Pinholes(gridPar):
-    """
-    Simulate PSFs with PyFocus
-
-    Parameters
-    ----------
-    N : int
-        Number of detector elements in the array in each dimension (typically 5)
-    Nx : int
-        Number of pixels in each dimension in the simulation array (e.g. 1024)
-    pxsize : float
-        Pixel size of the simulation space [nm] (typically 1)
-    M : float
-        Total magnification of the optical system (typically 500)
-    pxpitch : float
-        Pixel pitch of the detector [nm] (real space, typically 75000)
-    pxdim : float
-        Detector element size [nm] (real space, typically 50000)
-
-    Returns
-    -------
-    p : np.array(Nx x Nx x N**2)
-        array with the pinholes of each detector element
-
-    """
-
-    if np.ndim(gridPar.N) == 0:
-        nx = gridPar.N
-        ny = gridPar.N
-    elif np.ndim(gridPar.N) == 1:
-        nx = gridPar.N[1]
-        ny = gridPar.N[0]
-    else:
-        raise ValueError('N has to a be a single or a couple of positive integers.')
-
-    p = np.zeros((gridPar.Nx, gridPar.Nx, nx*ny))
-    center = gridPar.Nx//2
-    sizeDet = int( np.round(gridPar.pxdim / gridPar.M / gridPar.pxsizex) )
-    if np.mod(sizeDet, 2) == 0:
-        sizeDet -= 1 # let this be odd
-    sizeDet = np.max((sizeDet, 1))
-    stepDet = int( np.round(gridPar.pxpitch / gridPar.M / gridPar.pxsizex) )
-    startcoord_x = int(np.ceil(center - np.floor(nx/2) * stepDet - 0.5 * sizeDet))
-    startcoord_y = int(np.ceil(center - np.floor(ny/2) * stepDet - 0.5 * sizeDet))
-
-    i = 0
-    for dy in range(ny):
-        for dx in range(nx):
-            ymin = np.max((startcoord_y+dy*stepDet, 0))
-            ymax = np.max((startcoord_y+dy*stepDet+sizeDet, 0))
-            xmin = np.max((startcoord_x+dx*stepDet, 0))
-            xmax = np.max((startcoord_x+dx*stepDet+sizeDet, 0))
-            p[ymin:ymax, xmin:xmax, i] = 1
-            i += 1
-
-    return p
 
 def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, z_shift = 0, spad = None,
                 return_entrance_field = False, normalize = True, verbose = True):
@@ -519,7 +463,7 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
         exPSF, emPSF = PSFs2D(exPar, emPar, gridPar.pxsizex, gridPar.Nx, z_shift = z_shift, verbose = verbose)
     
     if spad is None:
-        spad = Pinholes(gridPar)
+        spad = custom_detector(gridPar)
     
     detPSF = np.empty( (gridPar.Nx, gridPar.Nx, gridPar.Nch) )
 
@@ -624,7 +568,7 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
         zeta = -np.arange(gridPar.Nz) * gridPar.pxsizez
 
     if spad is None:
-        spad = Pinholes(gridPar)
+        spad = custom_detector(gridPar)
     
     PSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, gridPar.Nch) )
     detPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, gridPar.Nch) )
