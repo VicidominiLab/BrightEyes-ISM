@@ -464,10 +464,11 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
     
     if spad is None:
         spad = custom_detector(gridPar)
-    
-    detPSF = np.empty( (gridPar.Nx, gridPar.Nx, gridPar.Nch) )
+    Nch = spad.shape[-1]
 
-    for i in range(gridPar.Nch):
+    detPSF = np.empty( (gridPar.Nx, gridPar.Nx, Nch) )
+
+    for i in range(Nch):
         detPSF[:,:,i] = sgn.convolve( emPSF, spad[:,:,i], mode ='same' )
 
     # Apply non-linearity to excitation
@@ -498,7 +499,7 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
 
         detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, nx, ny)
         detPSFrot = np.flip(detPSFrot, axis=-1)
-        detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, gridPar.Nch)
+        detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, Nch)
 
     if gridPar.rotation != 0:
         theta = np.rad2deg(gridPar.rotation)
@@ -569,9 +570,10 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
 
     if spad is None:
         spad = custom_detector(gridPar)
-    
-    PSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, gridPar.Nch) )
-    detPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, gridPar.Nch) )
+    Nch = spad.shape[-1]
+
+    PSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, Nch) )
+    detPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, Nch) )
     exPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx) )
 
     if verbose == True:
