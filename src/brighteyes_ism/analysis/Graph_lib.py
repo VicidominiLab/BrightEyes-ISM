@@ -10,6 +10,8 @@ import matplotlib.gridspec as gridspec
 
 import numbers
 
+from ..simulation.detector import det_coords
+
 #%%
 
 from matplotlib import cm
@@ -562,7 +564,7 @@ def PlotShiftVectors(shift_vectors: np.ndarray, pxsize: float = 1, labels: bool 
 
 
 def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False, clabel: str = None, normalize: bool = False, fig: plt.Figure = None,
-                    ax: plt.axis = None):
+                    ax: plt.axis = None, hex_grid = False, gridsize = [4,2]):
     """
     It calculates and shows the fingerprint of an ISM dataset.
     It returns the corresponding figure and axis.
@@ -594,20 +596,31 @@ def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False,
         Matplotlib axis.
     """
 
-    if fig == None or ax == None:
+    if fig is None or ax is None:
         fig, ax = plt.subplots()
 
-    N = int( np.sqrt(dset.shape[-1]) )
-    fingerprint = dset.sum(axis=(0, 1)).reshape(N, N)
-    if normalize == True:
+    fingerprint = dset.sum(axis=(0, 1))
+
+    if normalize is True:
         max_counts = np.max(fingerprint)
         fingerprint = fingerprint / max_counts
-    im = ax.imshow(fingerprint, cmap=cmap)
+
+    if hex_grid is True:
+        N = gridsize[0]+1
+        s = det_coords(N, 'hex')
+        idx = np.argwhere(s[0] >= -(N // 2)).flatten()
+        s = -s[:, idx]
+        im = ax.hexbin(s[0], s[1], fingerprint, gridsize=[4,2], cmap=cmap)
+    else:
+        N = int(np.sqrt(dset.shape[-1]))
+        fingerprint = fingerprint.reshape(N, N)
+        im = ax.imshow(fingerprint, cmap=cmap)
+        ax.set_aspect('equal')
 
     ax.axis('off')
     fig.tight_layout()
 
-    if colorbar == True:
+    if colorbar is True:
 
         vmax = int(np.floor(np.max(fingerprint)))
         vmin = int(np.floor(np.min(fingerprint)))
