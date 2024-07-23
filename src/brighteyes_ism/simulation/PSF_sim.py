@@ -10,6 +10,7 @@ from .detector import custom_detector
 
 #%% Zernike
 
+
 def Zernike(index, A, h, rho, phi, normalize = True):
     """
     This function is designed to work with a scalar coordinate (rho, phi), not
@@ -68,6 +69,7 @@ def Zernike(index, A, h, rho, phi, normalize = True):
     return  np.exp( phase )
 
 #%% functions
+
 
 class GridParameters:
     """
@@ -156,6 +158,7 @@ class GridParameters:
             print(name, end = '')
             print(' ' * int(14 - len(name)), end = '')
             print("" if values[n] is None else f'{values[n]:.2f}')
+
 
 class simSettings:
     """
