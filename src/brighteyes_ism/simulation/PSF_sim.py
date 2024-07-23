@@ -131,7 +131,10 @@ class GridParameters:
     @property
     def Nch(self):
         if np.ndim(self.N) == 0:
-            Ntot = self.N**2
+            if self.geometry == 'rect':
+                Ntot = self.N**2
+            elif self.geometry == 'hex':
+                Ntot = self.N**2 - self.N//2 - (1+(-1)**((self.N+1)/2))*0.5
         elif np.ndim(self.N) == 1:
             Ntot = self.N[1]*self.N[0]
         else:
