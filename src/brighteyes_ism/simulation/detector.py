@@ -84,7 +84,7 @@ def hexagon(n, radius):
     idx = polygon(x, y, shape=(n, n))
     hex_pinhole[idx] = 1
 
-    return hex_pinhole
+    return hex_pinhole.T
 
 
 def rect_grid(n, x):
@@ -136,11 +136,11 @@ def hex_grid(n, x):
 
     for n_i, i in enumerate(x):
         for n_j, j in enumerate(x):
-            s[n_i, n_j] = np.array([i - 0.5 * (j % 2), 0.5 * np.sqrt(3) * j])
+            s[n_i, n_j] = np.array([0.5 * np.sqrt(3) * i, j - 0.5 * (i % 2)])
 
     s = s.reshape(-1, 2).T
 
-    condition = np.abs(s[0]) <= (n // 2)
+    condition = np.abs(s[1]) <= (n // 2)
     idx = np.argwhere(condition).flatten()
     s = s[:, idx]
 
@@ -245,12 +245,8 @@ def custom_detector(grid):
 
     if grid.name == 'airyscan':
         airy_1 = np.sqrt(s[0] ** 2 + s[1] ** 2) < grid.N // 2
-        airy_2 = np.logical_and(s[0] == -(grid.N // 2), s[1] == 0)
+        airy_2 = np.logical_and(s[1] == -(grid.N // 2), s[0] == 0)
         idx = np.argwhere(np.logical_or(airy_1, airy_2)).flatten()
-        s = s[:, idx]
-    elif grid.geometry == 'hex':
-        condition = np.abs(s[0]) <= (grid.N // 2)
-        idx = np.argwhere(condition).flatten()
         s = s[:, idx]
 
     s *= grid.pxpitch
