@@ -85,10 +85,20 @@ class GridParameters:
         Detector element size [nm] (real space, typically 50000)
     pxsizex : float
         Pixel size of the simulation space [nm] (typically 1)
-    M : float
-        Total magnification of the optical system (typically 500)
     Nz : int
         number of axial planes (typically an odd integer)
+    pinhole_shape : str
+        Shape of the invidual pinhole. Valid choices are 'square', 'cirle', or 'hexagon'.
+    geometry : str
+        Detector geometry. Valid choices are 'rect' or 'hex'.
+    name : str
+        If 'airyscan', the simulated detector is the commercial 32-elements AiryScan from Zeiss.
+    M : float
+        Total magnification of the optical system (typically 500)
+    rotation : float
+        Detector rotation angle (rad)
+    mirroring: int
+        Flip of the horizonatal axis of the detector plane (+1 or - 1)
     """
 
     # __slots__ = ['pxsizex', 'pxsizez', 'Nx', 'Ny', 'Nz', 'pxpitch', 'pxdim', 'N', 'M']
@@ -106,7 +116,7 @@ class GridParameters:
         self.M = M  # overall magnification of the system
         self.rotation = 0  # rototion angle of the detector array (rad)
         self.mirroring = 1  # flip of the x_d axis (+/- 1)
-        self.name = None
+        self.name = None  # None or 'airyscan'
 
     @property
     def rangex(self):
