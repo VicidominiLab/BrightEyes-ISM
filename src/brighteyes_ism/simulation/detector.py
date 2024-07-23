@@ -110,6 +110,8 @@ def rect_grid(n, x):
         for n_j, j in enumerate(x):
             s[n_i, n_j] = np.array([i, j])
 
+    s = s.reshape(-1, 2).T
+
     return s
 
 
@@ -135,6 +137,12 @@ def hex_grid(n, x):
     for n_i, i in enumerate(x):
         for n_j, j in enumerate(x):
             s[n_i, n_j] = np.array([i - 0.5 * (j % 2), 0.5 * np.sqrt(3) * j])
+
+    s = s.reshape(-1, 2).T
+
+    condition = np.abs(s[0]) <= (n // 2)
+    idx = np.argwhere(condition).flatten()
+    s = s[:, idx]
 
     return s
 
@@ -164,8 +172,6 @@ def det_coords(n, geometry):
         s = hex_grid(n, x)
     else:
         raise Exception("Detector geometry not valid. Select 'rect' or 'hex'.")
-
-    s = s.reshape(-1, 2).T
 
     return s
 
@@ -243,7 +249,8 @@ def custom_detector(grid):
         idx = np.argwhere(np.logical_or(airy_1, airy_2)).flatten()
         s = s[:, idx]
     elif grid.geometry == 'hex':
-        idx = np.argwhere(s[0] >= -(grid.N // 2)).flatten()
+        condition = np.abs(s[0]) <= (grid.N // 2)
+        idx = np.argwhere(condition).flatten()
         s = s[:, idx]
 
     s *= grid.pxpitch
