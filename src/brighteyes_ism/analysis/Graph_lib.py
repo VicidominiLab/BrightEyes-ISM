@@ -600,19 +600,20 @@ def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False,
         fig, ax = plt.subplots()
 
     fingerprint = dset.sum(axis=(0, 1))
-
+    N = int(np.ceil(np.sqrt(dset.shape[-1])))
+        
     if normalize is True:
         max_counts = np.max(fingerprint)
         fingerprint = fingerprint / max_counts
 
     if hex_grid is True:
-        N = gridsize[0]+1
-        s = det_coords(N, 'hex')
-        idx = np.argwhere(s[0] >= -(N // 2)).flatten()
-        s = -s[:, idx]
-        im = ax.hexbin(s[0], s[1], fingerprint, gridsize=[4,2], cmap=cmap)
+        s = -det_coords(N, 'hex')
+        s = np.flip(s, axis = 0)
+        im = ax.hexbin(s[0], s[1], fingerprint, gridsize=gridsize, cmap=cmap)
+        w = N//2 + 1
+        ax.set_xlim([-w,w])
+        ax.set_ylim([-w,w])
     else:
-        N = int(np.sqrt(dset.shape[-1]))
         fingerprint = fingerprint.reshape(N, N)
         im = ax.imshow(fingerprint, cmap=cmap)
         ax.set_aspect('equal')
