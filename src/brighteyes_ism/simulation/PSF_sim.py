@@ -6,6 +6,8 @@ from poppy.zernike import noll_indices, R, zern_name
 import copy as cp
 from tqdm import tqdm
 
+from numbers import Number
+
 from .detector import custom_detector
 
 #%% Zernike
@@ -103,9 +105,9 @@ class GridParameters:
         Flip of the horizonatal axis of the detector plane (+1 or - 1)
     """
 
-    # __slots__ = ['pxsizex', 'pxsizez', 'Nx', 'Ny', 'Nz', 'pxpitch', 'pxdim', 'N', 'M']
+    # __slots__ = ['pxsizex', 'pxsizez', 'Nx', 'Nz', 'pxpitch', 'pxdim', 'N', 'M']
     
-    def __init__(self, pxsizex=40, pxsizez=50, Nx = 100, Ny = 100, Nz = 1, pxpitch = 75e3, pxdim = 50e3, N = 5, M = 450):
+    def __init__(self, pxsizex=40, pxsizez=50, Nx = 100, Nz = 1, pxpitch = 75e3, pxdim = 50e3, N = 5, M = 450):
         self.pxsizex = pxsizex  # nm - lateral pixel size of the images
         self.pxsizez = pxsizez  # nm - distance of the axial planes
         self.Nx = Nx  # number of samples along the X and Y axis
@@ -160,7 +162,12 @@ class GridParameters:
         for n, name in enumerate(names):
             print(name, end = '')
             print(' ' * int(14 - len(name)), end = '')
-            print("" if values[n] is None else f'{values[n]:.2f}')
+            if values[n] is None:
+                print("")
+            elif isinstance(values[n], Number):
+                print(f'{values[n]:.2f}')
+            else:
+                print(values[n])
 
 
 class simSettings:
@@ -471,6 +478,12 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
     
     """
 
+    # simulate detector array
+
+    if spad is None:
+        spad = custom_detector(gridPar)
+    Nch = spad.shape[-1]
+
     # Simulate ism psfs
     
     if return_entrance_field == True:
@@ -478,10 +491,6 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
     else:
         exPSF, emPSF = PSFs2D(exPar, emPar, gridPar.pxsizex, gridPar.Nx, z_shift = z_shift, verbose = verbose)
     
-    if spad is None:
-        spad = custom_detector(gridPar)
-    Nch = spad.shape[-1]
-
     detPSF = np.empty( (gridPar.Nx, gridPar.Nx, Nch) )
 
     for i in range(Nch):
@@ -583,6 +592,7 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
         zeta = np.arange(gridPar.Nz) * gridPar.pxsizez
     elif stack == "negative":
         zeta = -np.arange(gridPar.Nz) * gridPar.pxsizez
+
 
     if spad is None:
         spad = custom_detector(gridPar)

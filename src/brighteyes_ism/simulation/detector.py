@@ -222,7 +222,7 @@ def pinhole_array(s, nx, mag, pxsize, pxdim, pinhole_shape):
     detector = np.zeros((nx, nx, nch))
 
     for k in range(s.shape[1]):
-        detector[..., k] = convolve(pinhole, img[..., k], mode='same')
+        detector[..., k] = convolve(img[..., k], pinhole, mode='same')
 
     return detector
 
