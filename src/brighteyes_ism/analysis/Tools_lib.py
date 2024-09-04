@@ -305,7 +305,7 @@ def ArgMaxND(data):
     return arg, mx
 
 
-def FWHM(x, y):
+def FWHM(x, y, height  = 0.5):
     '''
     It calculates the Full Width at Half Maximum of a 1D curve.
 
@@ -323,7 +323,6 @@ def FWHM(x, y):
 
     '''
 
-    height = 0.5
     height_half_max = np.max(y) * height
     index_max = np.argmax(y)
     x_low = np.interp(height_half_max, y[:index_max], x[:index_max])
@@ -437,7 +436,7 @@ def point_cloud_from_img(dset):
     return point_cloud_matrix
 
 
-def kl_divergence(ground_truth, reconstruction):
+def kl_divergence(ground_truth, reconstruction, remove_inf=True):
     """
     Calculates the Kullback-Leibler divergence for each iteration of the reconstruction
 
@@ -447,6 +446,8 @@ def kl_divergence(ground_truth, reconstruction):
         Reference image (Nz x Ny x Nx)
     reconstruction : np.ndarray
         Stack of reconstructed images (N_iter x Nz x Ny x Nx)
+    remove_inf : bool
+        If True, local infinity values are replaced with zeros
 
     Returns
     -------
@@ -459,7 +460,10 @@ def kl_divergence(ground_truth, reconstruction):
     kl = np.empty((n_iter, n_z))
 
     for n in range(n_iter):
-        kl[n] = kl_div(ground_truth, reconstruction[n]).sum(axis=(-2, -1))
+        kl_iter = kl_div(ground_truth, reconstruction[n])
+        if remove_inf is True:
+            kl_iter[np.isposinf(kl_iter)] = 0
+        kl[n] = kl_iter.sum(axis=(-2, -1))
 
     kl = np.squeeze(kl.T)
 
