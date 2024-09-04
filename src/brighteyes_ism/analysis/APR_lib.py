@@ -32,7 +32,7 @@ def hann2d(shape: tuple):
     return W.T
 
 
-def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool = True, filter_sigma: float = 0,
+def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool = True, filter_sigma: float = 1,
         mode: str = 'interp'):
     '''
     It performs adaptive pixel reassignment on a single-plane ISM dataset using the phase correlation method.
@@ -52,7 +52,7 @@ def APR(dset: np.ndarray, usf: int, ref: int, pxsize: float = 1, apodize: bool =
         The default is True.
     filter_sigma: float
         If bigger than zero, the dataset is denoised with a gaussian filter.
-        The default is 0.
+        The default is 1.
     mode : str, optional
         Registration method. It can be a fourier shift ('fourier'')
         or a linear interpolation ('interp'). The default is 'interp'.

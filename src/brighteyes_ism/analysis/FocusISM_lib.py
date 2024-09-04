@@ -305,7 +305,7 @@ def focusISM(img, sigma_B_bound = None, threshold = 0, apr = True, calibration =
     # Adaptive pixel reassignment
     
     if apr == True:
-        shift, img_ism = APR.APR(img, usf, ref)
+        shift, img_ism = APR.APR(img, usf, ref, filter_sigma=1)
         img_ism[img_ism<0] = 0
     else:
         img_ism = img
