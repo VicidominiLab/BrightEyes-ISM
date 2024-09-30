@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.special import kl_div
 
 from .FRC_lib import radial_profile
 
@@ -436,7 +435,7 @@ def point_cloud_from_img(dset):
     return point_cloud_matrix
 
 
-def kl_divergence(ground_truth, reconstruction, remove_inf=True):
+def kl_divergence(ground_truth, reconstruction, remove_inf=True, intensity_offset = False):
     """
     Calculates the Kullback-Leibler divergence for each iteration of the reconstruction
 
@@ -448,12 +447,20 @@ def kl_divergence(ground_truth, reconstruction, remove_inf=True):
         Stack of reconstructed images (N_iter x Nz x Ny x Nx)
     remove_inf : bool
         If True, local infinity values are replaced with zeros
+    intensity_offset :
+        If False, the divergence is calculated as the relative entropy.
+        If true, it contains an additional term -x + y. 
 
     Returns
     -------
     kl : np.ndarray
         KL divergence (N_iter)
     """
+
+    if intensity_offset is True:
+        from scipy.special import kl_div as kl_div
+    else:
+        from scipy.special import rel_entr as kl_div
 
     n_z = ground_truth.shape[0] if ground_truth.ndim > 2 else 1
     n_iter = reconstruction.shape[0]
