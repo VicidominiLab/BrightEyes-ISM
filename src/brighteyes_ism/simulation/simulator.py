@@ -32,12 +32,13 @@ class ImageSimulator:
         Generates the blurred and noisy image.
 
     """
-    def __init__(self, phantom=None, psf=None, signal=1):
+    def __init__(self, phantom=None, psf=None, signal=1, z_projection=False):
         self.image = None
         self.clean_image = None
         self.phantom = phantom
         self.psf = psf
         self.signal = signal
+        self.z_projection = z_projection
 
     def blur(self):
         gt = self.ground_truth
@@ -47,10 +48,21 @@ class ImageSimulator:
         self.clean_image = np.empty_like(self.psf)
 
         if num_ch == 1:
-            for c in range(sz[-1]):
-                self.clean_image[..., c] = convolve(self.psf[..., c], gt, mode='same')
+            if np.ndim(self.phantom) == 3 and self.z_projection is True:
+                for z in range(sz[0]):
+                    for c in range(sz[-1]):
+                        self.clean_image[z, ..., c] = convolve(self.psf[z, ..., c], gt[z], mode='same')
+                self.clean_image = self.clean_image.sum(0)
+            else:
+                for c in range(sz[-1]):
+                    self.clean_image[..., c] = convolve(self.psf[..., c], gt, mode='same')
         elif num_ch == 0:
-            self.clean_image = convolve(self.psf, gt, mode='same')
+            if np.ndim(self.phantom) == 3 and self.z_projection is True:
+                for z in range(sz[0]):
+                    self.clean_image = convolve(self.psf[z], gt[z], mode='same')
+                self.clean_image = self.clean_image.sum(0)
+            else:
+                self.clean_image = convolve(self.psf, gt, mode='same')
         else:
             raise Exception("The PSF has less dimensions than the phantom.")
 
