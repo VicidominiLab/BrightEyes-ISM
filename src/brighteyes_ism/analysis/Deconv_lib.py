@@ -269,7 +269,7 @@ def deconv_RL_FFT(h, i, max_iter = 50, epsilon = None, reg = 0, out = 'last'):
         return obj_all
 
 
-def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None, reg = 0, out = 'last', verbose = False):
+def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None, reg = 0, out = 'last'):
     """
     Multi-image Richardson-Lucy deconvolution, performed using FFT.
     It deconvolves the entire dataset, returning a single deconvoluted image.
@@ -324,9 +324,6 @@ def MultiImg_RL_FFT(h, i, bkg = None, max_iter = 50, pad = None, epsilon = None,
     print('Multi-image deconvolution:')
     pbar = tqdm(total=max_iter)
     while k < max_iter:
-        
-        if verbose == True:
-            print(k)
         
         tmp = 0        
         
