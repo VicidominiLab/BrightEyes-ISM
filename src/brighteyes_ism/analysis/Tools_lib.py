@@ -435,16 +435,16 @@ def point_cloud_from_img(dset):
     return point_cloud_matrix
 
 
-def kl_divergence(ground_truth, reconstruction, remove_inf=True, intensity_offset = False):
+def kl_divergence(ground_truth, reconstruction, remove_inf=True, intensity_offset = False, normalize_entries = False):
     """
     Calculates the Kullback-Leibler divergence for each iteration of the reconstruction
 
     Parameters
     ----------
     ground_truth : np.ndarray
-        Reference image (Nz x Ny x Nx)
+        Reference image (Ny x Nx)
     reconstruction : np.ndarray
-        Stack of reconstructed images (N_iter x Nz x Ny x Nx)
+        Stack of reconstructed images (N_iter x Ny x Nx)
     remove_inf : bool
         If True, local infinity values are replaced with zeros
     intensity_offset :
@@ -461,13 +461,21 @@ def kl_divergence(ground_truth, reconstruction, remove_inf=True, intensity_offse
         from scipy.special import kl_div as kl_div
     else:
         from scipy.special import rel_entr as kl_div
+        
+    if normalize_entries is True:
+        gt = ground_truth/ground_truth.sum()
+        data = np.moveaxis(reconstruction, 0, -1)/reconstruction.sum(axis = (-1,-2))
+        data = np.moveaxis(data, -1, 0)
+    else:
+        gt = ground_truth
+        data = reconstruction
 
     n_z = ground_truth.shape[0] if ground_truth.ndim > 2 else 1
     n_iter = reconstruction.shape[0]
     kl = np.empty((n_iter, n_z))
 
     for n in range(n_iter):
-        kl_iter = kl_div(ground_truth, reconstruction[n])
+        kl_iter = kl_div(gt, data[n])
         if remove_inf is True:
             kl_iter[np.isposinf(kl_iter)] = 0
         kl[n] = kl_iter.sum(axis=(-2, -1))
