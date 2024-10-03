@@ -90,9 +90,9 @@ def ShowImg(image: np.ndarray, pxsize_x: float, clabel: str = None, vmin: float 
     ax.axis('off')
 
     if vmax is None:
-        vmax = np.max(image)
+        vmax = np.nanmax(image)
     if vmin is None:
-        vmin = np.min(image)
+        vmin = np.nanmin(image)
 
     if colorbar==True:
 
@@ -608,7 +608,7 @@ def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False,
 
     if hex_grid is True:
         s = -det_coords(N, 'hex')
-        s = np.flip(s, axis = 0)
+        s = np.flip(s, axis=0)
         im = ax.hexbin(s[0], s[1], fingerprint, gridsize=gridsize, cmap=cmap)
         w = N//2 + 1
         ax.set_xlim([-w,w])
