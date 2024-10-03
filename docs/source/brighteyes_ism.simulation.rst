@@ -11,3 +11,5 @@ simulation
 
    brighteyes_ism.simulation.PSF_sim
    brighteyes_ism.simulation.Tubulin_sim
+   brighteyes_ism.simulation.simulator
+   brighteyes_ism.simulation.detector
