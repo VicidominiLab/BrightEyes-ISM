@@ -37,7 +37,7 @@ class ImageSimulator:
         self.clean_image = None
         self.phantom = phantom
         self.psf = psf
-        self.signal = signal
+        self.signal = np.array(signal)
         self.z_projection = z_projection
 
     def blur(self):
@@ -75,7 +75,12 @@ class ImageSimulator:
 
     @property
     def ground_truth(self):
-        return self.phantom * self.signal
+        if np.ndim(self.signal) == 1:
+            return np.einsum('i..., i -> i...', self.phantom, self.signal)
+        elif np.ndim(self.signal) == 0:
+            return self.phantom * self.signal
+        else:
+            raise Exception("The signal should be a scalar or a 1D array.")
 
     def copy(self):
         return cp.copy(self)
