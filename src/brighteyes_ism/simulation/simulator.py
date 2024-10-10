@@ -45,26 +45,29 @@ class ImageSimulator:
         num_ch = np.ndim(self.psf) - np.ndim(self.phantom)
         sz = self.psf.shape
 
-        self.clean_image = np.empty_like(self.psf)
+        self.clean_image = np.empty(gt.shape + (self.psf.shape[-1],))
 
         if num_ch == 1:
             if np.ndim(self.phantom) == 3 and self.z_projection is True:
                 for z in range(sz[0]):
                     for c in range(sz[-1]):
-                        self.clean_image[z, ..., c] = convolve(self.psf[z, ..., c], gt[z], mode='same')
+                        self.clean_image[z, ..., c] = convolve(gt[z], self.psf[z, ..., c], mode='same')
                 self.clean_image = self.clean_image.sum(0)
             else:
                 for c in range(sz[-1]):
-                    self.clean_image[..., c] = convolve(self.psf[..., c], gt, mode='same')
+                    self.clean_image[..., c] = convolve(gt, self.psf[..., c], mode='same')
         elif num_ch == 0:
             if np.ndim(self.phantom) == 3 and self.z_projection is True:
                 for z in range(sz[0]):
-                    self.clean_image = convolve(self.psf[z], gt[z], mode='same')
+                    self.clean_image = convolve(gt[z], self.psf[z], mode='same')
                 self.clean_image = self.clean_image.sum(0)
             else:
-                self.clean_image = convolve(self.psf, gt, mode='same')
+                self.clean_image = convolve(gt, self.psf, mode='same')
         else:
             raise Exception("The PSF has less dimensions than the phantom.")
+            
+        self.clean_image[self.clean_image<0] = 0
+
 
     def poisson_noise(self):
         self.image = np.random.poisson(self.clean_image)
