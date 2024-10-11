@@ -463,24 +463,27 @@ def kl_divergence(ground_truth, reconstruction, remove_inf=True, intensity_offse
         from scipy.special import rel_entr as kl_div
         
     if normalize_entries is True:
-        gt = ground_truth/ground_truth.sum()
-        data = np.moveaxis(reconstruction, 0, -1)/reconstruction.sum(axis = (-1,-2))
+        norm_gt = ground_truth.sum()
+        norm_data = reconstruction.sum(axis = (-1,-2))
+
+        gt = ground_truth.copy()
+        gt = np.divide(ground_truth, norm_gt, out = gt, where = (norm_gt>0) )
+
+        data = np.moveaxis(reconstruction, 0, -1).copy()
+        data = np.divide(data, norm_data, out = data, where = (norm_data>0) )
         data = np.moveaxis(data, -1, 0)
     else:
         gt = ground_truth
         data = reconstruction
 
-    n_z = ground_truth.shape[0] if ground_truth.ndim > 2 else 1
     n_iter = reconstruction.shape[0]
-    kl = np.empty((n_iter, n_z))
+    kl = np.empty(n_iter)
 
     for n in range(n_iter):
         kl_iter = kl_div(gt, data[n])
         if remove_inf is True:
             kl_iter[np.isposinf(kl_iter)] = 0
         kl[n] = kl_iter.sum(axis=(-2, -1))
-
-    kl = np.squeeze(kl.T)
 
     return kl
 
