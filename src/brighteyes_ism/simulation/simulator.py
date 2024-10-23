@@ -5,7 +5,7 @@ import copy as cp
 
 class ImageSimulator:
     """
-    Object with methods to generate the forward model of a (multi-channel) microscope.
+    Object with methods to generate the forward model of a (multichannel) microscope.
     The number of dimensions of phantom and the psf should differ by 1 at most.
     In this case, the last dimension of the psf is interpreted as the channel.
 
@@ -66,8 +66,7 @@ class ImageSimulator:
         else:
             raise Exception("The PSF has less dimensions than the phantom.")
             
-        self.clean_image[self.clean_image<0] = 0
-
+        self.clean_image[self.clean_image < 0] = 0
 
     def poisson_noise(self):
         self.image = np.random.poisson(self.clean_image)
