@@ -564,7 +564,7 @@ def PlotShiftVectors(shift_vectors: np.ndarray, pxsize: float = 1, labels: bool 
 
 
 def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False, clabel: str = None, normalize: bool = False, fig: plt.Figure = None,
-                    ax: plt.axis = None, hex_grid = False, gridsize = [4,2]):
+                    ax: plt.axis = None, hex_grid = False, name = None):
     """
     It calculates and shows the fingerprint of an ISM dataset.
     It returns the corresponding figure and axis.
@@ -600,13 +600,29 @@ def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False,
         fig, ax = plt.subplots()
 
     fingerprint = dset.sum(axis=(0, 1))
-    N = int(np.ceil(np.sqrt(dset.shape[-1])))
+    
+    if name == 'airyscan':
+        
+        N = 7
+        k = 3
+        nch = N**2 - 2**(k-1)
+        
+        temp = np.ones(nch) * np.nan
+        
+        raise NotImplementedError
+        
+    else:
+        N = int(np.ceil(np.sqrt(dset.shape[-1])))
         
     if normalize is True:
         max_counts = np.max(fingerprint)
         fingerprint = fingerprint / max_counts
 
     if hex_grid is True:
+        
+        k = (N-1)/2
+        gridsize = np.asarray([N - (1+(-1)**k)/2, N//2]).astype(int)
+
         s = -det_coords(N, 'hex')
         s = np.flip(s, axis=0)
         im = ax.hexbin(s[0], s[1], fingerprint, gridsize=gridsize, cmap=cmap)
