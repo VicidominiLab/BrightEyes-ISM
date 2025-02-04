@@ -603,13 +603,67 @@ def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False,
     
     if name == 'airyscan':
         
-        N = 7
-        k = 3
-        nch = N**2 - 2**(k-1)
+        #N = 7
+        #k = 3
+        #nch = N**2 - 2**(k-1)
         
-        temp = np.ones(nch) * np.nan
+        #temp = np.ones(nch) * np.nan
         
-        raise NotImplementedError
+        counts = fingerprint
+        N = 11  # Number of elements
+        s2 = hex_grid(N, np.linspace(0, N - 1, N))
+        
+        hexb = np.zeros((66))
+        hexb[0:19] = 0
+        hexb[20] = counts[27]
+        hexb[21] = counts[28]
+        hexb[22] = 0
+        hexb[23] = 0
+        hexb[24] = counts[26]
+        hexb[25] = counts[14]
+        hexb[26] = counts[15]
+        hexb[27] = counts[16]
+        hexb[28] = counts[22]
+        hexb[29] = 0
+        hexb[30] = counts[25]
+        hexb[31] = counts[13]
+        hexb[32] = counts[4]
+        hexb[33] = counts[5]
+        hexb[34] = counts[17]
+        hexb[35] = counts[30]
+        hexb[36] = counts[12]
+        hexb[37] = counts[3]
+        hexb[38] = counts[0]
+        hexb[39] = counts[6]
+        hexb[40] = counts[18]
+        hexb[41] = counts[31]
+        hexb[42] = counts[24]
+        hexb[43] = counts[11]
+        hexb[44] = counts[2]
+        hexb[45] = counts[1]
+        hexb[46] = counts[7]
+        hexb[47] = counts[19]
+        hexb[48] = counts[23]
+        hexb[49] = counts[10]
+        hexb[50] = counts[9]
+        hexb[51] = counts[8]
+        hexb[52] = counts[20]
+        hexb[53] = 0
+        hexb[54] = 0
+        hexb[55] = 0
+        hexb[56] = counts[22]
+        hexb[57] = counts[21]
+        hexb[58:65] = 0
+        
+        fig, ax = plt.subplots()
+        ax.set_facecolor("black")
+        plt.hexbin(s2[1], s2[0], C=hexb, gridsize=[6,5], cmap="inferno", linewidths=0.5, edgecolors="k")
+        plt.colorbar(label="Cell Value")
+        plt.xlim([-0.5,5.5])
+        plt.ylim([2,8.5])
+        plt.xticks([])
+        plt.yticks([])
+        ax.set_box_aspect(1)
         
     else:
         N = int(np.ceil(np.sqrt(dset.shape[-1])))
