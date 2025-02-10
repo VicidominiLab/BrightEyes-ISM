@@ -10,7 +10,7 @@ import matplotlib.gridspec as gridspec
 
 import numbers
 
-from ..simulation.detector import det_coords
+from ..simulation.detector import det_coords, airy_to_hex
 
 #%%
 
@@ -602,18 +602,12 @@ def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False,
     fingerprint = dset.sum(axis=(0, 1))
     
     if name == 'airyscan':
-        
         N = 7
-        k = 3
-        nch = N**2 - 2**(k-1)
-        
-        temp = np.ones(nch) * np.nan
-        
-        raise NotImplementedError
-        
+        hex_grid = True
+        fingerprint = airy_to_hex(fingerprint)
     else:
         N = int(np.ceil(np.sqrt(dset.shape[-1])))
-        
+
     if normalize is True:
         max_counts = np.max(fingerprint)
         fingerprint = fingerprint / max_counts

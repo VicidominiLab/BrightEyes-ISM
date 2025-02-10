@@ -244,10 +244,7 @@ def custom_detector(grid):
     s = det_coords(grid.N, grid.geometry)
 
     if grid.name == 'airyscan':
-        airy_1 = np.sqrt(s[0] ** 2 + s[1] ** 2) < grid.N // 2
-        airy_2 = np.logical_and(s[1] == -(grid.N // 2), s[0] == 0)
-        idx = np.argwhere(np.logical_or(airy_1, airy_2)).flatten()
-        s = s[:, idx]
+        s = hex_to_airy(s)
 
     s *= grid.pxpitch
 
@@ -256,3 +253,22 @@ def custom_detector(grid):
     detector = pinhole_array(s, grid.Nx, grid.M, grid.pxsizex, grid.pxdim, grid.pinhole_shape)
 
     return detector
+
+
+def hex_to_airy(s):
+
+    idx_array = [22, 28, 29, 23, 16, 15, 21, 27, 34, 35, 36, 30, 24, 17, 10, 9, 8, 14, 20, 26, 33, 41, 42, 37, 31, 18, 11, 3, 2, 7, 13, 19]
+
+    return s[..., idx_array]
+
+
+def airy_to_hex(s):
+
+    ss = np.ones((s.shape[:-1] + (45,))) * np.nan
+
+    idx1 = [2, 3, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 41, 42]
+    idx2 = [28, 27, 29, 16, 15, 14, 26, 30, 17, 5, 4, 13, 25, 31, 18, 6, 0, 3, 12, 19, 7, 1, 2, 11, 24, 20, 8, 9, 10, 23, 21, 22]
+
+    ss[..., idx1] = s[..., idx2]
+
+    return ss
