@@ -241,10 +241,11 @@ def custom_detector(grid):
         Numpy array of binary masks. Each channel is a pinhole in a different position.
     """
 
-    s = det_coords(grid.N, grid.geometry)
-
     if grid.name == 'airyscan':
+        s = det_coords(7, 'hex')
         s = hex_to_airy(s)
+    else:
+        s = det_coords(grid.N, grid.geometry)
 
     s *= grid.pxpitch
 

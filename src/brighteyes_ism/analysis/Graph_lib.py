@@ -605,11 +605,19 @@ def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False,
         N = 7
         hex_grid = True
         fingerprint = airy_to_hex(fingerprint)
+
+        idx = np.argwhere(np.logical_not(np.isfinite(fingerprint)))
+        fingerprint[idx] = np.nanmin(fingerprint)
+
+        mask = np.ones(45)
+        idx_mask = [0, 3, 4, 7, 42, 44, 20, 23, 19, 16, 26, 25, 24]
+        mask[idx_mask] = 0
     else:
         N = int(np.ceil(np.sqrt(dset.shape[-1])))
+        mask = np.ones(dset.shape[-1])
 
     if normalize is True:
-        max_counts = np.max(fingerprint)
+        max_counts = np.nanmax(fingerprint)
         fingerprint = fingerprint / max_counts
 
     if hex_grid is True:
@@ -619,7 +627,8 @@ def ShowFingerprint(dset: np.ndarray, cmap: str = 'hot', colorbar: bool = False,
 
         s = -det_coords(N, 'hex')
         s = np.flip(s, axis=0)
-        im = ax.hexbin(s[0], s[1], fingerprint, gridsize=gridsize, cmap=cmap)
+
+        im = ax.hexbin(s[0], s[1], fingerprint, alpha=mask, gridsize=gridsize, cmap=cmap)
         w = N//2 + 1
         ax.set_xlim([-w,w])
         ax.set_ylim([-w,w])
