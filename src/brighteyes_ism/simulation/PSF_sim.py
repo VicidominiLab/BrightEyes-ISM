@@ -279,6 +279,7 @@ def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verb
     kwargs = {
         'apod_factor': True,
         'defocus_min': z_shift,
+        'defocus_max': z_shift,
         'n_pix_psf': Nx,
         'fov': Nx * pxsizex,
         'n_pix_pupil': par.mask_sampl,
@@ -302,7 +303,8 @@ def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verb
         kwargs.update({
             'special_phase_mask': 'vortex'
         })
-    elif par.mask == 'Zernike':
+
+    if par.abe_index is not None:
         zernike = np.zeros(np.max(par.abe_index) + 1)
         zernike[par.abe_index] = par.abe_ampli
         kwargs.update({
