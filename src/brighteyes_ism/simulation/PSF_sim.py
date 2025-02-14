@@ -284,7 +284,7 @@ def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verb
         'n_pix_pupil': par.mask_sampl,
         'na':  par.na,
         'n_i': par.n,
-        'wavelength': par.wl,
+        'wavelength': par.wl/par.n,
         'e0x': np.cos(np.deg2rad(par.gamma)),
         'e0y': np.sin(np.deg2rad(par.gamma)) * np.exp(1j*np.deg2rad(par.beta))
     }
