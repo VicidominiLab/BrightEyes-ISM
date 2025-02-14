@@ -1,77 +1,20 @@
 import numpy as np
 import scipy.signal as sgn
 from skimage.transform import rotate
-from PyFocus.custom_mask_functions import generate_incident_field, custom_mask_focus_field_XY, plot_in_cartesian
-from poppy.zernike import noll_indices, R, zern_name
+
+from psf_generator.propagators import VectorialCartesianPropagator
+from psf_generator.utils.plots import plot_pupil, plot_psf
+
 import copy as cp
 from tqdm import tqdm
+
+import torch
 
 from numbers import Number
 
 from .detector import custom_detector
 
-#%% Zernike
-
-
-def Zernike(index, A, h, rho, phi, normalize = True):
-    """
-    This function is designed to work with a scalar coordinate (rho, phi), not
-    with arrays. It is only for internal use of the simulator.
-
-    Parameters
-    ----------
-    index : int or array
-        aberration index
-    A : float or array
-        aberration strength [rad]
-    h : float
-        radius of aperture of the objective lens [mm]
-    rho : float
-        radial coordinate of the pupil plane [mm]
-    phi : float
-        angular coordinate of the pupil plane [mm]
-    normalize : bool
-        if true, the integral of Z**2 on the unit circle equals pi
-    
-    Returns
-    -------
-    
-    """
-    
-    if np.isscalar( index ):
-        index = [ index ]
-        
-    if np.isscalar(A):
-        A = [ A ]*len(index)
-        
-    rho /= h
-    phase = 0
-    
-    for i in range( len(index) ):
-    
-        n, m = noll_indices( index[i] )
-        
-        if rho > 1:
-            radial = 0
-        else:
-            radial = R(n, m, rho)
-    
-        if m < 0:
-            angular = np.sin( np.abs(m) * phi )
-        else:
-            angular = np.cos( np.abs(m) * phi )
-        
-        if normalize == True:
-            norm_coeff = np.sqrt(2) * np.sqrt(n + 1)
-        else:
-            norm_coeff = 1
-        
-        phase += A[i] * 1j * norm_coeff * ( radial * angular ) 
-        
-    return  np.exp( phase )
-
 #%% functions
-
 
 class GridParameters:
     """
@@ -333,49 +276,46 @@ def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verb
     
     """
 
-    if type(par) == np.ndarray:
-        return par
+    print('new PSF generator')
+
+    kwargs = {
+        'apod_factor': True,
+        'defocus_min': z_shift,
+        'n_pix_psf': Nx,
+        'fov': Nx * pxsizex,
+        'n_pix_pupil': par.mask_sampl,
+        'na':  par.na,
+        'n_i': par.n,
+        'wavelength': par.wl,
+        'e0x': np.cos(np.deg2rad(par.gamma)),
+        'e0y': np.sin(np.deg2rad(par.gamma)) * np.exp(1j*np.deg2rad(par.beta))
+    }
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    propagator = VectorialCartesianPropagator(**kwargs, device=device)
+
+    # Amplitude envelope
+
+    if par.field == 'Gaussian':
+        propagator.envelope = par.wo
+
+    # Phase Mask
+
+    if par.mask == 'VP':
+        propagator.special_phase_mask = 'vortex'
+    elif par.mask == 'Zernike':
+        zernike = np.zeros(np.max(par.abe_index) + 1)
+        zernike[par.abe_index] = par.abe_ampli
+        propagator.zernike_coefficients = zernike
+
+    fields = propagator.compute_focus_field().cpu().detach().numpy()
+
+    psf = np.squeeze(np.sum(np.abs(fields)**2, 1))
+
+    if return_entrance_field is True:
+        return psf, np.squeeze(fields)
     else:
-        x_range = Nx * pxsizex
-        
-        #Entrance Field
-        
-        if par.field == 'Gaussian':
-            entrance_field = lambda rho, phi, w0, f, k: np.exp( -(rho/w0)**2 )
-        elif par.field == 'PlaneWave':
-           entrance_field = lambda rho, phi, w0, f, k: 1
-        
-        #Phase Mask
-        
-        if par.mask is None:
-            custom_mask = lambda rho, phi, w0, f, k: 1
-        elif par.mask == 'VP':
-            custom_mask = lambda rho, phi, w0, f, k: np.exp( 1j * phi )
-        elif par.mask == 'Zernike':
-            custom_mask = lambda rho, phi, w0, f, k: Zernike(par.abe_index, par.abe_ampli, par.h, rho, phi)
-        elif callable(par.mask):
-            custom_mask = par.mask
-        
-        #Total mask
-        
-        exMask = lambda rho, phi, w0, f, k: entrance_field(rho, phi, w0,f,k)* custom_mask(rho, phi,w0,f,k)
-    
-        #Calculation of entrance fields
-        
-        ex_lens, ey_lens = generate_incident_field(exMask, par.alpha, par.f, par.mask_sampl, par.mask_sampl, par.gamma, par.beta, par.w0, par.I0, par.wl/par.n)
-    
-        #Calculation of focus fields
-    
-        EX, EY, EZ = custom_mask_focus_field_XY(ex_lens, ey_lens, par.alpha, par.h, par.wl/par.n, z_shift, Nx, par.mask_sampl, par.mask_sampl, x_range, countdown=verbose, x0=0, y0=0)
-    
-        # Calculation of PSF intensity
-    
-        PSF = np.abs(EX)**2 + np.abs(EY)**2 + np.abs(EZ)**2
-        
-        if return_entrance_field == True:
-            return PSF, [ex_lens, ey_lens]
-        else:
-            return PSF
+        return psf
 
 
 def PSFs2D(exPar, emPar, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verbose = True):
