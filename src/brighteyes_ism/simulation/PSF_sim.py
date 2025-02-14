@@ -3,7 +3,7 @@ import scipy.signal as sgn
 from skimage.transform import rotate
 
 from psf_generator.propagators import VectorialCartesianPropagator
-from psf_generator.utils.plots import plot_pupil, plot_psf
+from poppy.zernike import zern_name
 
 import copy as cp
 from tqdm import tqdm
@@ -247,7 +247,7 @@ class simSettings:
             print(str(values[n]))
 
 
-def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verbose = True):
+def singlePSF(par, pxsizex, Nx, rangez, nz, return_entrance_field = False):
     """
     Simulate PSFs with PyFocus
 
@@ -259,8 +259,6 @@ def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verb
         Pixel size of the simulation space in XY [nm] (typically 1)
     Nx : int
         Number of pixels in XY dimensions in the simulation array, e.g. 1024
-    z_shift : float
-        Distance from the focal plane at which generate the PSF [nm] (optional)
     return_entrance_field : bool
         Returns the X and Y components of the field at the
         pupil plane in polar coordinates. They have to be
@@ -278,8 +276,9 @@ def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verb
 
     kwargs = {
         'apod_factor': True,
-        'defocus_min': z_shift,
-        'defocus_max': z_shift,
+        'defocus_min': rangez[0],
+        'defocus_max': rangez[1],
+        'n_defocus': nz,
         'n_pix_psf': Nx,
         'fov': Nx * pxsizex,
         'n_pix_pupil': par.mask_sampl,
@@ -326,64 +325,7 @@ def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verb
         return psf
 
 
-def PSFs2D(exPar, emPar, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verbose = True):
-    """
-    Simulate PSFs with PyFocus
-
-    Parameters
-    ----------
-    exPar : simSettings()
-        object with excitation PSF parameters
-    emPar : simSettings()
-        object with emission PSF parameters
-    pxsizex : float
-        Pixel size of the simulation space in XY [nm] (typically 1)
-    Nx : int
-        Number of pixels in XY dimensions in the simulation array, e.g. 1024
-    z_shift : float
-        Distance from the focal plane at which generate the PSF [nm] (optional)
-    return_entrance_field: bool
-        Returns the X and Y components of the field at the
-        pupil plane in polar coordinates. They have to be
-        converted into cartesian coordinate using the
-        plot_in_cartesian function
-    
-    Returns
-    -------
-    exPSF : np.array(Nx x Nx)
-        with the excitation PSF calculated from exPSF
-    emPSF : np.array(Nx x Nx)
-        with the emission PSF calculated from emPSF
-    
-    """
-    
-    if return_entrance_field == True:
-        
-        # Excitation PSF
-        
-        ex_PSF, ex_fields = singlePSF(exPar, pxsizex, Nx, z_shift = z_shift, return_entrance_field = True, verbose = verbose)
-        
-        # Emission PSF
-        
-        em_PSF, em_fields = singlePSF(emPar, pxsizex, Nx, z_shift = z_shift, return_entrance_field = True, verbose = verbose)
-    
-        return ex_PSF, em_PSF, ex_fields, em_fields
-    
-    else:
-        
-        # Excitation PSF
-        
-        ex_PSF = singlePSF(exPar, pxsizex, Nx, z_shift = z_shift, verbose = verbose)
-        
-        # Emission PSF
-        
-        em_PSF = singlePSF(emPar, pxsizex, Nx, z_shift = z_shift, verbose = verbose)
-    
-        return ex_PSF, em_PSF
-
-
-def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, z_shift = 0, spad = None,
-                return_entrance_field = False, normalize = True, verbose = True):
+def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, z_shift = 0, spad = None, normalize = True):
     """
     Calculate PSFs for all pixels of the SPAD array by using FFTs
 
@@ -395,9 +337,6 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
         object with excitation PSF parameters
     emPar : simSettings object
         object with emission PSF parameters
-    rotParam : np.ndarray
-        array with the mirror and rotation angle to apply to the detection PSFs.
-        The default is None.
     n_photon_excitation : int
         Order of non-linear excitation. Default is 1.
     stedPar : simSettings object
@@ -406,11 +345,6 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
         Distance from the focal plane at which generate the PSF [nm]
     spad : np.array( N**2 x Nx x Nx)
         Pinholes distribution . If none it is calculated using the input parameters
-    return_entrance_field : bool
-        Returns the X and Y components of the field at the
-        pupil plane in polar coordinates. They have to be
-        converted into cartesian coordinate using the
-        plot_in_cartesian function
     normalize : bool
         If True, all the returned PSFs are divided by the total flux.
         Default is True.
@@ -433,11 +367,9 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
     Nch = spad.shape[-1]
 
     # Simulate ism psfs
-    
-    if return_entrance_field == True:
-        exPSF, emPSF, ex_fields, em_fields = PSFs2D(exPar, emPar, gridPar.pxsizex, gridPar.Nx, z_shift = z_shift, return_entrance_field = True, verbose = verbose)
-    else:
-        exPSF, emPSF = PSFs2D(exPar, emPar, gridPar.pxsizex, gridPar.Nx, z_shift = z_shift, verbose = verbose)
+
+    exPSF = singlePSF(exPar, gridPar.pxsizex, gridPar.Nx, [z_shift, z_shift], 1)
+    emPSF = singlePSF(emPar, gridPar.pxsizex, gridPar.Nx, [z_shift, z_shift], 1)
     
     detPSF = np.empty( (gridPar.Nx, gridPar.Nx, Nch) )
 
@@ -453,7 +385,7 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
     
     if type(stedPar) == simSettings:
         stedPar.mask = 'VP'
-        donut = singlePSF(stedPar, gridPar.pxsizex, gridPar.Nx, z_shift = z_shift, verbose = verbose)
+        donut = singlePSF(stedPar, gridPar.pxsizex, gridPar.Nx, [z_shift, z_shift], 1)
         donut *= stedPar.sted_sat/np.max(donut)
         stedPSF = np.exp( - donut * stedPar.sted_pulse / stedPar.sted_tau )
         exPSF *= stedPSF
@@ -488,10 +420,8 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
         detPSFrot /= detPSFrot.sum()
         exPSF /= exPSF.sum()
 
-    if return_entrance_field == True:
-        return PSF, detPSFrot, exPSF, ex_fields, em_fields
-    else:
-        return PSF, detPSFrot, exPSF
+
+    return PSF, detPSFrot, exPSF
     
 def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, spad = None, stack: str = 'symmetrical',
                 normalize = True, verbose = True):
@@ -506,9 +436,6 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
         object with excitation PSF parameters
     emPar : simSettings object
         object with emission PSF parameters
-    rotParam : np.ndarray
-        array with the mirror and rotation angle to apply to the detection PSFs.
-        The default is None.
     n_photon_excitation : int
         Order of non-linear excitation. Default is 1.
     stedPar : simSettings object
