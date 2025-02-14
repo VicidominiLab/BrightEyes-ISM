@@ -276,8 +276,6 @@ def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verb
     
     """
 
-    print('new PSF generator')
-
     kwargs = {
         'apod_factor': True,
         'defocus_min': z_shift,
