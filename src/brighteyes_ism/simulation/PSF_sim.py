@@ -484,7 +484,7 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
         zeta_range = zeta
 
     for i, z in enumerate( zeta_range ):
-        PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = n_photon_excitation, stedPar = stedPar, z_shift = z, spad = spad, normalize = False, verbose = False)
+        PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = n_photon_excitation, stedPar = stedPar, z_shift = z, spad = spad, normalize = False)
 
     if normalize == True:
         idx = np.argwhere(zeta == 0).item()
