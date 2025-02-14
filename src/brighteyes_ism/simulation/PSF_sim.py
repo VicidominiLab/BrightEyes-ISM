@@ -291,22 +291,28 @@ def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verb
         'e0y': np.sin(np.deg2rad(par.gamma)) * np.exp(1j*np.deg2rad(par.beta))
     }
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    propagator = VectorialCartesianPropagator(**kwargs, device=device)
-
     # Amplitude envelope
 
     if par.field == 'Gaussian':
-        propagator.envelope = par.wo
+        kwargs.update({
+            'envelope': par.wo
+        })
 
     # Phase Mask
 
     if par.mask == 'VP':
-        propagator.special_phase_mask = 'vortex'
+        kwargs.update({
+            'special_phase_mask': 'vortex'
+        })
     elif par.mask == 'Zernike':
         zernike = np.zeros(np.max(par.abe_index) + 1)
         zernike[par.abe_index] = par.abe_ampli
-        propagator.zernike_coefficients = zernike
+        kwargs.update({
+            'zernike_coefficients': zernike
+        })
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    propagator = VectorialCartesianPropagator(**kwargs, device=device)
 
     fields = propagator.compute_focus_field().cpu().detach().numpy()
 
