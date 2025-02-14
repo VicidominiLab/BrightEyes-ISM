@@ -316,6 +316,8 @@ def singlePSF(par, pxsizex, Nx, z_shift = 0, return_entrance_field = False, verb
 
     psf = np.squeeze(np.sum(np.abs(fields)**2, 1))
 
+    psf = psf * par.I0 / np.sum(psf)
+
     if return_entrance_field is True:
         return psf, np.squeeze(fields)
     else:
