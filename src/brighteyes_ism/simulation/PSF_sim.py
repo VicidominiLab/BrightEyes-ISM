@@ -468,23 +468,63 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
     elif stack == "negative":
         zeta = -np.arange(gridPar.Nz) * gridPar.pxsizez
 
+    # simulate detector array
 
     if spad is None:
         spad = custom_detector(gridPar)
     Nch = spad.shape[-1]
 
-    PSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, Nch) )
-    detPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx, Nch) )
-    exPSF = np.empty( (gridPar.Nz, gridPar.Nx, gridPar.Nx) )
+    # Simulate ism psfs
 
-    if verbose == True:
-        print(f'Calculating the PSFs stack from z = {zeta[0]} nm to z = {zeta[-1]} nm:')
-        zeta_range = tqdm(zeta)
-    else:
-        zeta_range = zeta
+    exPSF = singlePSF(exPar, gridPar.pxsizex, gridPar.Nx, [zeta[0], zeta[-1]], gridPar.Nz)
+    emPSF = singlePSF(emPar, gridPar.pxsizex, gridPar.Nx, [zeta[0], zeta[-1]], gridPar.Nz)
 
-    for i, z in enumerate( zeta_range ):
-        PSF[i, :, :, :], detPSF[i, :, :, :], exPSF[i, :, :] = SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = n_photon_excitation, stedPar = stedPar, z_shift = z, spad = spad, normalize = False)
+    detPSF = np.empty((gridPar.Nz, gridPar.Nx, gridPar.Nx, Nch))
+
+    for z in range(gridPar.Nz):
+        for i in range(Nch):
+            detPSF[z, :, :, i] = sgn.convolve(emPSF[z], spad[:, :, i], mode='same')
+
+    # Apply non-linearity to excitation
+
+    if n_photon_excitation > 1:
+        exPSF = exPSF ** n_photon_excitation
+
+    # Simulate donut
+
+    if type(stedPar) == simSettings:
+        stedPar.mask = 'VP'
+        donut = singlePSF(stedPar, gridPar.pxsizex, gridPar.Nx, [zeta[0], zeta[1]], gridPar.Nz)
+        donut *= stedPar.sted_sat / np.max(donut)
+        stedPSF = np.exp(-donut * stedPar.sted_pulse / stedPar.sted_tau)
+        exPSF *= stedPSF
+
+    # Rotate and mirror detPSF
+
+    detPSFrot = detPSF.copy()
+
+    if gridPar.mirroring == -1:
+        if np.ndim(gridPar.N) == 0:
+            nx = gridPar.N
+            ny = gridPar.N
+        else:
+            nx = gridPar.N[1]
+            ny = gridPar.N[0]
+
+        detPSFrot = detPSFrot.reshape(gridPar.Nz, gridPar.Nx, gridPar.Nx, nx, ny)
+        detPSFrot = np.flip(detPSFrot, axis=-1)
+        detPSFrot = detPSFrot.reshape(gridPar.Nz, gridPar.Nx, gridPar.Nx, Nch)
+
+
+    if gridPar.rotation != 0:
+        theta = np.rad2deg(gridPar.rotation)
+        for z in range(gridPar.Nz):
+            detPSFrot[z] = rotate(detPSFrot[z], theta, resize=False, center=None, order=None, mode='constant', cval=0,
+                               clip=True, preserve_range=False)
+
+    # Calculate total PSF
+
+    PSF = np.einsum('zxyc, zxy -> zxyc', detPSFrot, exPSF)
 
     if normalize == True:
         idx = np.argwhere(zeta == 0).item()
