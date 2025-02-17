@@ -494,7 +494,7 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
 
     if type(stedPar) == simSettings:
         stedPar.mask = 'VP'
-        donut = singlePSF(stedPar, gridPar.pxsizex, gridPar.Nx, [zeta[0], zeta[1]], gridPar.Nz)
+        donut = singlePSF(stedPar, gridPar.pxsizex, gridPar.Nx, [zeta[0], zeta[-1]], gridPar.Nz)
         donut *= stedPar.sted_sat / np.max(donut)
         stedPSF = np.exp(-donut * stedPar.sted_pulse / stedPar.sted_tau)
         exPSF *= stedPSF
