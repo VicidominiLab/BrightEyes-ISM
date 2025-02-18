@@ -467,7 +467,7 @@ def partial_convolution(psf, pinhole, dim1='ijk', dim2='jkl', axis='jk'):
 
     dims = [dim1, dim2, dim3]
     axis_list = [[d.find(c) for c in axis] for d in dims]
-    print(axis_list)
+
     otf = fftn(psf, dim=axis_list[0])
     kernel = fftn(pinhole, dim=axis_list[1])
 
@@ -493,9 +493,9 @@ def generate_pinhole_array(gridPar, spad=None):
         else:
             nx, ny = gridPar.N
 
-        spad_rot = spad_rot.reshape(gridPar.Nz, gridPar.Nx, gridPar.Nx, nx, ny)
-        spad_rot = torch.flip(spad_rot, axis=-1)
-        spad_rot = spad_rot.reshape(gridPar.Nz, gridPar.Nx, gridPar.Nx, Nch)
+        spad_rot = spad_rot.reshape(gridPar.Nx, gridPar.Nx, nx, ny)
+        spad_rot = np.flip(spad_rot, axis=-1)
+        spad_rot = spad_rot.reshape(gridPar.Nx, gridPar.Nx, Nch)
 
     if gridPar.rotation != 0:
         theta = np.rad2deg(gridPar.rotation)
