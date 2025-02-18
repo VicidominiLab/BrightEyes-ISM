@@ -496,10 +496,7 @@ def partial_convolution(psf, pinhole, dim1='ijk', dim2='jkl', axis='jk'):
     dim3 = ''.join(sorted(set(dim3), key=dim3.index))
 
     dims = [dim1, dim2, dim3]
-    axis_list = []
-
-    for a in range(3):
-        axis_list.append([dims[a].find(c) for c in axis])
+    axis_list = [[d.find(c) for c in axis] for d in dims]
 
     otf = fftn(psf, axes=axis_list[0])
     kernel = fftn(pinhole, axes=axis_list[1])
@@ -511,7 +508,3 @@ def partial_convolution(psf, pinhole, dim1='ijk', dim2='jkl', axis='jk'):
     conv = np.real(conv)  # Clipping to zero the residual imaginary part
 
     return conv
-
-
-
-
