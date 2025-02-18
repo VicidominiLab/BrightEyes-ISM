@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.signal as sgn
 from skimage.transform import rotate
+from scipy.fft import fftn, ifftn, ifftshift
 
 from psf_generator.propagators import VectorialCartesianPropagator
 from poppy.zernike import zern_name
@@ -379,9 +380,11 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitat
     detPSF = np.empty((gridPar.Nz, gridPar.Nx, gridPar.Nx, Nch))
 
 
-    for z in range(gridPar.Nz):
-        for i in range(Nch):
-            detPSF[z, :, :, i] = sgn.convolve(emPSF[z], spad[:, :, i], mode='same')
+    #for z in range(gridPar.Nz):
+    #    for i in range(Nch):
+    #        detPSF[z, :, :, i] = sgn.convolve(emPSF[z], spad[:, :, i], mode='same')
+
+    detPSF = partial_convolution(emPSF, spad, 'zxy', 'xyc', 'xy')
 
     # Apply non-linearity to excitation
 
@@ -485,3 +488,30 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation=1, stedPar=None, z_sh
         exPSF /= exPSF.sum()
 
     return PSF, detPSFrot, exPSF
+
+
+def partial_convolution(psf, pinhole, dim1='ijk', dim2='jkl', axis='jk'):
+
+    dim3 = dim1 + dim2
+    dim3 = ''.join(sorted(set(dim3), key=dim3.index))
+
+    dims = [dim1, dim2, dim3]
+    axis_list = []
+
+    for a in range(3):
+        axis_list.append([dims[a].find(c) for c in axis])
+
+    otf = fftn(psf, axes=axis_list[0])
+    kernel = fftn(pinhole, axes=axis_list[1])
+
+    conv = np.einsum(f'{dim1},{dim2}->{dim3}', otf, kernel)
+
+    conv = ifftn(conv, axes=axis_list[2])  # inverse FFT of the product
+    conv = ifftshift(conv)  # Rotation of 180 degrees of the phase of the FFT
+    conv = np.real(conv)  # Clipping to zero the residual imaginary part
+
+    return conv
+
+
+
+
