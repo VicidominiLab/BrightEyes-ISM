@@ -7,12 +7,12 @@ from poppy.zernike import zern_name
 import copy as cp
 
 import torch
-from torch.fft import fftn, ifftn, ifftshift
+from torchvision.transforms.functional import rotate
 
 from numbers import Number
 
 from .detector import custom_detector
-
+from .utils import partial_convolution
 
 # %% functions
 
@@ -317,8 +317,7 @@ def singlePSF(par, pxsizex, Nx, rangez, nz, device: str = 'cpu'):
 
 
 def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitation: int = 1,
-                stack: str = 'symmetrical',
-                normalize: bool = True, process: str = 'gpu'):
+                stack: str = 'symmetrical', normalize: bool = True, process: str = 'gpu'):
     """
     It calculates a z-stack of PSFs for all the elements of the SPAD array detector.
 
@@ -369,7 +368,6 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitat
     # simulate detector array
 
     pinholes = generate_pinhole_array(gridPar, spad)
-    pinholes = torch.from_numpy(pinholes).to(device).float()
 
     # Simulate ism psfs
 
@@ -461,31 +459,13 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation=1, stedPar=None, z_sh
     return PSF, detPSFrot, exPSF
 
 
-def partial_convolution(psf, pinhole, dim1='ijk', dim2='jkl', axis='jk'):
-    dim3 = dim1 + dim2
-    dim3 = ''.join(sorted(set(dim3), key=dim3.index))
-
-    dims = [dim1, dim2, dim3]
-    axis_list = [[d.find(c) for c in axis] for d in dims]
-
-    otf = fftn(psf, dim=axis_list[0])
-    kernel = fftn(pinhole, dim=axis_list[1])
-
-    conv = torch.einsum(f'{dim1},{dim2}->{dim3}', otf, kernel)
-
-    conv = ifftn(conv, dim=axis_list[2])  # inverse FFT of the product
-    conv = ifftshift(conv, dim=axis_list[2])  # Rotation of 180 degrees of the phase of the FFT
-    conv = np.real(conv)  # Clipping to zero the residual imaginary part
-
-    return conv
-
-
 def generate_pinhole_array(gridPar, spad=None):
+
     if spad is None:
         spad = custom_detector(gridPar)
     Nch = spad.shape[-1]
 
-    spad_rot = spad.copy()
+    spad_rot = spad.clone()
 
     if gridPar.mirroring == -1:
         if np.ndim(gridPar.N) == 0:
@@ -494,12 +474,13 @@ def generate_pinhole_array(gridPar, spad=None):
             nx, ny = gridPar.N
 
         spad_rot = spad_rot.reshape(gridPar.Nx, gridPar.Nx, nx, ny)
-        spad_rot = np.flip(spad_rot, axis=-1)
+        spad_rot = torch.flip(spad_rot, axis=-1)
         spad_rot = spad_rot.reshape(gridPar.Nx, gridPar.Nx, Nch)
 
     if gridPar.rotation != 0:
         theta = np.rad2deg(gridPar.rotation)
-        spad_rot = rotate(spad_rot, theta, resize=False, center=None, order=None, mode='constant', cval=0,
-                          clip=True, preserve_range=False)
+        spad_rot = torch.movedim(spad_rot, -1, 0)
+        spad_rot = rotate(spad_rot, theta)
+        spad_rot = torch.movedim(spad_rot, 0, -1)
 
     return spad_rot

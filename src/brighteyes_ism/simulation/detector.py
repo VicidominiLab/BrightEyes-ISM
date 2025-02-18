@@ -1,7 +1,9 @@
 import numpy as np
 from scipy.signal import convolve
 from skimage.draw import polygon
+import torch
 
+from .utils import partial_convolution
 
 def circle(n, radius):
     """
@@ -201,10 +203,12 @@ def pinhole_array(s, nx, mag, pxsize, pxdim, pinhole_shape):
         Numpy array of binary masks. Each channel is a pinhole in a different position.
     """
 
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     radius = pxdim / mag / pxsize / 2
     nch = s.shape[1]
 
-    img = np.zeros((nx, nx, nch))
+    img = torch.zeros((nx, nx, nch)).to(device)
     c = s + nx // 2
 
     for k in range(s.shape[1]):
@@ -219,10 +223,9 @@ def pinhole_array(s, nx, mag, pxsize, pxdim, pinhole_shape):
     else:
         raise Exception("Pinhole shape not valid. Select 'square', 'cirle', or 'hexagon'.")
 
-    detector = np.zeros((nx, nx, nch))
+    pinhole = torch.from_numpy(pinhole).to(device)
 
-    for k in range(s.shape[1]):
-        detector[..., k] = convolve(img[..., k], pinhole, mode='same')
+    detector = partial_convolution(img, pinhole, 'ijk', 'ij', 'ij')
 
     return detector
 
