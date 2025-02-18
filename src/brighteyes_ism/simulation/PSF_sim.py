@@ -1,22 +1,20 @@
 import numpy as np
-import scipy.signal as sgn
 from skimage.transform import rotate
-from scipy.fft import fftn, ifftn, ifftshift
 
 from psf_generator.propagators import VectorialCartesianPropagator
 from poppy.zernike import zern_name
 
 import copy as cp
-from tqdm import tqdm
 
 import torch
+from torch.fft import fftn, ifftn, ifftshift
 
 from numbers import Number
 
 from .detector import custom_detector
 
 
-#%% functions
+# %% functions
 
 class GridParameters:
     """
@@ -117,7 +115,7 @@ class GridParameters:
 
 class simSettings:
     """
-    Optical settings used to calculate the psf 
+    Optical settings used to calculate the psf
     Read more at https://pyfocus.readthedocs.io/en/latest/
 
     Attributes
@@ -143,7 +141,7 @@ class simSettings:
         'PlaneWave' = flat field
         'Gaussian' = gaussian beam of waist w0
     mask : str
-        phase mask 
+        phase mask
         None = no mask
         'VP' = vortex phase plate
         'Zernike' = zernike polynomials
@@ -160,7 +158,7 @@ class simSettings:
         aberration index
     abe_ampli : float or array
         aberration amplitude in rad
-    
+
     Methods
     -------
     f : float
@@ -249,7 +247,7 @@ class simSettings:
             print(str(values[n]))
 
 
-def singlePSF(par, pxsizex, Nx, rangez, nz):
+def singlePSF(par, pxsizex, Nx, rangez, nz, device: str = 'cpu'):
     """
     Simulate PSFs with PyFocus
 
@@ -261,14 +259,14 @@ def singlePSF(par, pxsizex, Nx, rangez, nz):
         Pixel size of the simulation space in XY [nm] (typically 1)
     Nx : int
         Number of pixels in XY dimensions in the simulation array, e.g. 1024
-    
+
     Returns
     -------
     exPSF : np.array(Nx x Nx)
         with the excitation PSF calculated from exPSF
     emPSF : np.array(Nx x Nx)
         with the emission PSF calculated from emPSF
-    
+
     """
 
     kwargs = {
@@ -307,20 +305,20 @@ def singlePSF(par, pxsizex, Nx, rangez, nz):
             'zernike_coefficients': zernike
         })
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     propagator = VectorialCartesianPropagator(**kwargs, device=device)
 
-    fields = propagator.compute_focus_field().cpu().detach().numpy()
+    fields = propagator.compute_focus_field()
 
-    psf = np.sum(np.abs(fields) ** 2, 1)
+    psf = torch.sum(torch.abs(fields) ** 2, 1)
 
-    psf = psf * par.I0 / np.sum(psf)
+    psf = psf * par.I0 / torch.sum(psf)
 
     return psf, fields
 
 
-def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitation: int = 1, stack: str = 'symmetrical',
-                normalize: bool = True):
+def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitation: int = 1,
+                stack: str = 'symmetrical',
+                normalize: bool = True, process: str = 'gpu'):
     """
     It calculates a z-stack of PSFs for all the elements of the SPAD array detector.
 
@@ -354,8 +352,10 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitat
         array with the detection PSFs for each detector element
     exPSF : np.array(Nz x Nx x Nx)
         array with the excitation PSF
-    
+
     """
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() and process == 'gpu' else "cpu")
 
     if stack == "symmetrical":
         zeta = (np.arange(gridPar.Nz) - gridPar.Nz // 2) * gridPar.pxsizez
@@ -368,23 +368,15 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitat
 
     # simulate detector array
 
-    if spad is None:
-        spad = custom_detector(gridPar)
-    Nch = spad.shape[-1]
+    pinholes = generate_pinhole_array(gridPar, spad)
+    pinholes = torch.from_numpy(pinholes).to(device).float()
 
     # Simulate ism psfs
 
-    exPSF, _ = singlePSF(exPar, gridPar.pxsizex, gridPar.Nx, [zeta[0], zeta[-1]], gridPar.Nz)
-    emPSF, _ = singlePSF(emPar, gridPar.pxsizex, gridPar.Nx, [zeta[0], zeta[-1]], gridPar.Nz)
+    exPSF, _ = singlePSF(exPar, gridPar.pxsizex, gridPar.Nx, [zeta[0], zeta[-1]], gridPar.Nz, device)
+    emPSF, _ = singlePSF(emPar, gridPar.pxsizex, gridPar.Nx, [zeta[0], zeta[-1]], gridPar.Nz, device)
 
-    detPSF = np.empty((gridPar.Nz, gridPar.Nx, gridPar.Nx, Nch))
-
-
-    #for z in range(gridPar.Nz):
-    #    for i in range(Nch):
-    #        detPSF[z, :, :, i] = sgn.convolve(emPSF[z], spad[:, :, i], mode='same')
-
-    detPSF = partial_convolution(emPSF, spad, 'zxy', 'xyc', 'xy')
+    detPSF = partial_convolution(emPSF, pinholes, 'zxy', 'xyc', 'xy')
 
     # Apply non-linearity to excitation
 
@@ -400,31 +392,9 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitat
         stedPSF = np.exp(-donut * stedPar.sted_pulse / stedPar.sted_tau)
         exPSF *= stedPSF
 
-    # Rotate and mirror detPSF
-
-    detPSFrot = detPSF.copy()
-
-    if gridPar.mirroring == -1:
-        if np.ndim(gridPar.N) == 0:
-            nx = gridPar.N
-            ny = gridPar.N
-        else:
-            nx = gridPar.N[1]
-            ny = gridPar.N[0]
-
-        detPSFrot = detPSFrot.reshape(gridPar.Nz, gridPar.Nx, gridPar.Nx, nx, ny)
-        detPSFrot = np.flip(detPSFrot, axis=-1)
-        detPSFrot = detPSFrot.reshape(gridPar.Nz, gridPar.Nx, gridPar.Nx, Nch)
-
-    if gridPar.rotation != 0:
-        theta = np.rad2deg(gridPar.rotation)
-        for z in range(gridPar.Nz):
-            detPSFrot[z] = rotate(detPSFrot[z], theta, resize=False, center=None, order=None, mode='constant', cval=0,
-                                  clip=True, preserve_range=False)
-
     # Calculate total PSF
 
-    PSF = np.einsum('zxyc, zxy -> zxyc', detPSFrot, exPSF)
+    PSF = torch.einsum('zxyc, zxy -> zxyc', detPSF, exPSF)
 
     if normalize is True:
         idx = np.argwhere(zeta == 0).item()
@@ -432,10 +402,11 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitat
         for i, z in enumerate(zeta):
             PSF[i, :, :, :] /= focal_flux
 
-    return PSF, detPSF, exPSF
+    return PSF.cpu().detach().numpy(), detPSF.cpu().detach().numpy(), exPSF.cpu().detach().numpy()
 
 
-def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation=1, stedPar=None, z_shift=0, spad=None, normalize=True):
+def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation=1, stedPar=None, z_shift=0, spad=None, normalize=True,
+                process: str = 'gpu'):
     """
     Calculate PSFs for all pixels of the SPAD array by using FFTs
 
@@ -476,7 +447,7 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation=1, stedPar=None, z_sh
     grid.Nz = 1
     stack = [z_shift, z_shift]
 
-    PSF, detPSFrot, exPSF = SPAD_PSF_3D(grid, exPar, emPar, stedPar, spad, n_photon_excitation, stack, False)
+    PSF, detPSFrot, exPSF = SPAD_PSF_3D(grid, exPar, emPar, stedPar, spad, n_photon_excitation, stack, False, process)
 
     PSF = np.squeeze(PSF)
     detPSFrot = np.squeeze(detPSFrot)
@@ -491,20 +462,44 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation=1, stedPar=None, z_sh
 
 
 def partial_convolution(psf, pinhole, dim1='ijk', dim2='jkl', axis='jk'):
-
     dim3 = dim1 + dim2
     dim3 = ''.join(sorted(set(dim3), key=dim3.index))
 
     dims = [dim1, dim2, dim3]
     axis_list = [[d.find(c) for c in axis] for d in dims]
 
-    otf = fftn(psf, axes=axis_list[0])
-    kernel = fftn(pinhole, axes=axis_list[1])
+    otf = fftn(psf, dim=axis_list[0])
+    kernel = fftn(pinhole, dim=axis_list[1])
 
-    conv = np.einsum(f'{dim1},{dim2}->{dim3}', otf, kernel)
+    conv = torch.einsum(f'{dim1},{dim2}->{dim3}', otf, kernel)
 
-    conv = ifftn(conv, axes=axis_list[2])  # inverse FFT of the product
+    conv = ifftn(conv, dim=axis_list[2])  # inverse FFT of the product
     conv = ifftshift(conv)  # Rotation of 180 degrees of the phase of the FFT
     conv = np.real(conv)  # Clipping to zero the residual imaginary part
 
     return conv
+
+
+def generate_pinhole_array(gridPar, spad=None):
+    if spad is None:
+        spad = custom_detector(gridPar)
+    Nch = spad.shape[-1]
+
+    spad_rot = spad.copy()
+
+    if gridPar.mirroring == -1:
+        if np.ndim(gridPar.N) == 0:
+            nx = ny = gridPar.N
+        else:
+            nx, ny = gridPar.N
+
+        spad_rot = spad_rot.reshape(gridPar.Nz, gridPar.Nx, gridPar.Nx, nx, ny)
+        spad_rot = torch.flip(spad_rot, axis=-1)
+        spad_rot = spad_rot.reshape(gridPar.Nz, gridPar.Nx, gridPar.Nx, Nch)
+
+    if gridPar.rotation != 0:
+        theta = np.rad2deg(gridPar.rotation)
+        spad_rot = rotate(spad_rot, theta, resize=False, center=None, order=None, mode='constant', cval=0,
+                          clip=True, preserve_range=False)
+
+    return spad_rot
