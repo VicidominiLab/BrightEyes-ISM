@@ -14,6 +14,7 @@ from numbers import Number
 
 from .detector import custom_detector
 
+
 #%% functions
 
 class GridParameters:
@@ -49,8 +50,8 @@ class GridParameters:
     """
 
     # __slots__ = ['pxsizex', 'pxsizez', 'Nx', 'Nz', 'pxpitch', 'pxdim', 'N', 'M']
-    
-    def __init__(self, pxsizex=40, pxsizez=50, Nx = 100, Nz = 1, pxpitch = 75e3, pxdim = 50e3, N = 5, M = 450):
+
+    def __init__(self, pxsizex=40, pxsizez=50, Nx=100, Nz=1, pxpitch=75e3, pxdim=50e3, N=5, M=450):
         self.pxsizex = pxsizex  # nm - lateral pixel size of the images
         self.pxsizez = pxsizez  # nm - distance of the axial planes
         self.Nx = Nx  # number of samples along the X and Y axis
@@ -77,16 +78,16 @@ class GridParameters:
     def Nch(self):
         if np.ndim(self.N) == 0:
             if self.geometry == 'rect':
-                Ntot = self.N**2
+                Ntot = self.N ** 2
             elif self.geometry == 'hex':
-                Ntot = self.N**2 - self.N//2 - (1+(-1)**((self.N+1)/2))*0.5
+                Ntot = self.N ** 2 - self.N // 2 - (1 + (-1) ** ((self.N + 1) / 2)) * 0.5
         elif np.ndim(self.N) == 1:
-            Ntot = self.N[1]*self.N[0]
+            Ntot = self.N[1] * self.N[0]
         else:
             raise ValueError('N has to a be a single or a couple of positive integers.')
         return Ntot
 
-    def spad_size(self, mode: str = 'magnified', simPar = None):
+    def spad_size(self, mode: str = 'magnified', simPar=None):
         size = (self.pxpitch * (self.N - 1) + self.pxdim)
         if simPar is not None:
             return size / self.M / simPar.airy_unit
@@ -103,8 +104,8 @@ class GridParameters:
         names = list(dic)
         values = list(dic.values())
         for n, name in enumerate(names):
-            print(name, end = '')
-            print(' ' * int(14 - len(name)), end = '')
+            print(name, end='')
+            print(' ' * int(14 - len(name)), end='')
             if values[n] is None:
                 print("")
             elif isinstance(values[n], Number):
@@ -168,7 +169,7 @@ class simSettings:
     aberration : str / list
         Returns the list of aberrations by name.
     """
-    
+
     # __slots__ = ['na', 'n', 'wl', 'h', 'gamma', 'beta', 'w0', 'I0', 'field', 'mask', 'mask_sampl', 'sted_sat', 'sted_pulse', 'sted_tau', 'abe_index', 'abe_ampli']
 
     def __init__(self, na=1.4, n=1.5, wl=485.0, h=2.8, gamma=45.0, beta=90.0,
@@ -197,14 +198,14 @@ class simSettings:
         self.sted_tau = sted_tau  # fluorescence lifetime [ns]
         self.abe_index = abe_index  # aberration index (int or array)
         self.abe_ampli = abe_ampli  # aberration amplitude in rad (float or array)
-        
-    @property
-    def f(self):    # focal length of the objective lens [mm]
-        return self.h*self.n/self.na
 
     @property
-    def alpha(self):    # semiangular aperture of the objective [rad]
-        return np.arcsin(self.na/self.n)
+    def f(self):  # focal length of the objective lens [mm]
+        return self.h * self.n / self.na
+
+    @property
+    def alpha(self):  # semiangular aperture of the objective [rad]
+        return np.arcsin(self.na / self.n)
 
     @property
     def airy_unit(self):
@@ -218,20 +219,20 @@ class simSettings:
 
     @property
     def aberration(self):
-        
+
         if self.abe_index is None:
             return 'None'
-        
-        if np.isscalar( self.abe_index ):
-            index = [ self.abe_index ]
+
+        if np.isscalar(self.abe_index):
+            index = [self.abe_index]
         else:
             index = self.abe_index
 
         names = []
-        
-        for i in range( len(index) ):
-            names.append( zern_name( index[i] ) )
-        
+
+        for i in range(len(index)):
+            names.append(zern_name(index[i]))
+
         return names
 
     def copy(self):
@@ -242,12 +243,12 @@ class simSettings:
         names = list(dic)
         values = list(dic.values())
         for n, name in enumerate(names):
-            print(name, end = '')
-            print(' ' * int(14 - len(name)), end = '')
+            print(name, end='')
+            print(' ' * int(14 - len(name)), end='')
             print(str(values[n]))
 
 
-def singlePSF(par, pxsizex, Nx, rangez, nz, return_entrance_field = False):
+def singlePSF(par, pxsizex, Nx, rangez, nz):
     """
     Simulate PSFs with PyFocus
 
@@ -259,11 +260,6 @@ def singlePSF(par, pxsizex, Nx, rangez, nz, return_entrance_field = False):
         Pixel size of the simulation space in XY [nm] (typically 1)
     Nx : int
         Number of pixels in XY dimensions in the simulation array, e.g. 1024
-    return_entrance_field : bool
-        Returns the X and Y components of the field at the
-        pupil plane in polar coordinates. They have to be
-        converted into cartesian coordinate using the
-        plot_in_cartesian function
     
     Returns
     -------
@@ -282,11 +278,11 @@ def singlePSF(par, pxsizex, Nx, rangez, nz, return_entrance_field = False):
         'n_pix_psf': Nx,
         'fov': Nx * pxsizex,
         'n_pix_pupil': par.mask_sampl,
-        'na':  par.na,
+        'na': par.na,
         'n_i': par.n,
-        'wavelength': par.wl/par.n,
+        'wavelength': par.wl / par.n,
         'e0x': np.cos(np.deg2rad(par.gamma)),
-        'e0y': np.sin(np.deg2rad(par.gamma)) * np.exp(1j*np.deg2rad(par.beta))
+        'e0y': np.sin(np.deg2rad(par.gamma)) * np.exp(1j * np.deg2rad(par.beta))
     }
 
     # Amplitude envelope
@@ -315,116 +311,15 @@ def singlePSF(par, pxsizex, Nx, rangez, nz, return_entrance_field = False):
 
     fields = propagator.compute_focus_field().cpu().detach().numpy()
 
-    psf = np.squeeze(np.sum(np.abs(fields)**2, 1))
+    psf = np.sum(np.abs(fields) ** 2, 1)
 
     psf = psf * par.I0 / np.sum(psf)
 
-    if return_entrance_field is True:
-        return psf, np.squeeze(fields)
-    else:
-        return psf
+    return psf, fields
 
 
-def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, z_shift = 0, spad = None, normalize = True):
-    """
-    Calculate PSFs for all pixels of the SPAD array by using FFTs
-
-    Parameters
-    ----------
-    gridPar : GridParameters object
-        object with simulation space parameters
-    exPar : simSettings object
-        object with excitation PSF parameters
-    emPar : simSettings object
-        object with emission PSF parameters
-    n_photon_excitation : int
-        Order of non-linear excitation. Default is 1.
-    stedPar : simSettings object
-        object with STED beam parameters
-    z_shift : float
-        Distance from the focal plane at which generate the PSF [nm]
-    spad : np.array( N**2 x Nx x Nx)
-        Pinholes distribution . If none it is calculated using the input parameters
-    normalize : bool
-        If True, all the returned PSFs are divided by the total flux.
-        Default is True.
-    
-    Returns
-    -------
-    PSF : np.array(Nx x Nx x N**2)
-        array with the overall PSFs for each detector element
-    detPSF : np.array(Nx x Nx x N**2)
-        array with the detection PSFs for each detector element
-    exPSF : np.array(Nx x Nx)
-        array with the excitation PSF
-    
-    """
-
-    # simulate detector array
-
-    if spad is None:
-        spad = custom_detector(gridPar)
-    Nch = spad.shape[-1]
-
-    # Simulate ism psfs
-
-    exPSF = singlePSF(exPar, gridPar.pxsizex, gridPar.Nx, [z_shift, z_shift], 1)
-    emPSF = singlePSF(emPar, gridPar.pxsizex, gridPar.Nx, [z_shift, z_shift], 1)
-    
-    detPSF = np.empty( (gridPar.Nx, gridPar.Nx, Nch) )
-
-    for i in range(Nch):
-        detPSF[:,:,i] = sgn.convolve( emPSF, spad[:,:,i], mode ='same' )
-
-    # Apply non-linearity to excitation
-
-    if n_photon_excitation > 1:
-        exPSF = exPSF ** n_photon_excitation
-
-    # Simulate donut
-    
-    if type(stedPar) == simSettings:
-        stedPar.mask = 'VP'
-        donut = singlePSF(stedPar, gridPar.pxsizex, gridPar.Nx, [z_shift, z_shift], 1)
-        donut *= stedPar.sted_sat/np.max(donut)
-        stedPSF = np.exp( - donut * stedPar.sted_pulse / stedPar.sted_tau )
-        exPSF *= stedPSF
-
-    # Rotate and mirror detPSF
-
-    detPSFrot = detPSF.copy()
-
-    if gridPar.mirroring == -1:
-        if np.ndim(gridPar.N) == 0:
-            nx = gridPar.N
-            ny = gridPar.N
-        else:
-            nx = gridPar.N[1]
-            ny = gridPar.N[0]
-
-        detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, nx, ny)
-        detPSFrot = np.flip(detPSFrot, axis=-1)
-        detPSFrot = detPSFrot.reshape(gridPar.Nx, gridPar.Nx, Nch)
-
-    if gridPar.rotation != 0:
-        theta = np.rad2deg(gridPar.rotation)
-        detPSFrot = rotate(detPSFrot, theta, resize=False, center=None, order=None, mode='constant', cval=0,
-                       clip=True, preserve_range=False)
-
-    # Calculate total PSF
-    
-    PSF = np.einsum('ijk, ij -> ijk', detPSFrot, exPSF)
-
-    if normalize == True:
-        PSF /= PSF.sum()
-        detPSFrot /= detPSFrot.sum()
-        exPSF /= exPSF.sum()
-
-
-    return PSF, detPSFrot, exPSF
-    
-def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, spad = None, stack: str = 'symmetrical',
-                normalize = True, verbose = True):
+def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitation: int = 1, stack: str = 'symmetrical',
+                normalize: bool = True):
     """
     It calculates a z-stack of PSFs for all the elements of the SPAD array detector.
 
@@ -462,11 +357,13 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
     """
 
     if stack == "symmetrical":
-        zeta = (np.arange(gridPar.Nz) - gridPar.Nz//2) * gridPar.pxsizez
+        zeta = (np.arange(gridPar.Nz) - gridPar.Nz // 2) * gridPar.pxsizez
     elif stack == "positive":
         zeta = np.arange(gridPar.Nz) * gridPar.pxsizez
     elif stack == "negative":
         zeta = -np.arange(gridPar.Nz) * gridPar.pxsizez
+    else:
+        zeta = stack
 
     # simulate detector array
 
@@ -476,10 +373,11 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
 
     # Simulate ism psfs
 
-    exPSF = singlePSF(exPar, gridPar.pxsizex, gridPar.Nx, [zeta[0], zeta[-1]], gridPar.Nz)
-    emPSF = singlePSF(emPar, gridPar.pxsizex, gridPar.Nx, [zeta[0], zeta[-1]], gridPar.Nz)
+    exPSF, _ = singlePSF(exPar, gridPar.pxsizex, gridPar.Nx, [zeta[0], zeta[-1]], gridPar.Nz)
+    emPSF, _ = singlePSF(emPar, gridPar.pxsizex, gridPar.Nx, [zeta[0], zeta[-1]], gridPar.Nz)
 
     detPSF = np.empty((gridPar.Nz, gridPar.Nx, gridPar.Nx, Nch))
+
 
     for z in range(gridPar.Nz):
         for i in range(Nch):
@@ -515,21 +413,75 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, n_photon_excitation = 1, stedPar = None, 
         detPSFrot = np.flip(detPSFrot, axis=-1)
         detPSFrot = detPSFrot.reshape(gridPar.Nz, gridPar.Nx, gridPar.Nx, Nch)
 
-
     if gridPar.rotation != 0:
         theta = np.rad2deg(gridPar.rotation)
         for z in range(gridPar.Nz):
             detPSFrot[z] = rotate(detPSFrot[z], theta, resize=False, center=None, order=None, mode='constant', cval=0,
-                               clip=True, preserve_range=False)
+                                  clip=True, preserve_range=False)
 
     # Calculate total PSF
 
     PSF = np.einsum('zxyc, zxy -> zxyc', detPSFrot, exPSF)
 
-    if normalize == True:
+    if normalize is True:
         idx = np.argwhere(zeta == 0).item()
         focal_flux = PSF[idx, :, :, :].sum()
         for i, z in enumerate(zeta):
             PSF[i, :, :, :] /= focal_flux
 
     return PSF, detPSF, exPSF
+
+
+def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation=1, stedPar=None, z_shift=0, spad=None, normalize=True):
+    """
+    Calculate PSFs for all pixels of the SPAD array by using FFTs
+
+    Parameters
+    ----------
+    gridPar : GridParameters object
+        object with simulation space parameters
+    exPar : simSettings object
+        object with excitation PSF parameters
+    emPar : simSettings object
+        object with emission PSF parameters
+    n_photon_excitation : int
+        Order of non-linear excitation. Default is 1.
+    stedPar : simSettings object
+        object with STED beam parameters
+    z_shift : float
+        Distance from the focal plane at which generate the PSF [nm]
+    spad : np.array( N**2 x Nx x Nx)
+        Pinholes distribution . If none it is calculated using the input parameters
+    normalize : bool
+        If True, all the returned PSFs are divided by the total flux.
+        Default is True.
+
+    Returns
+    -------
+    PSF : np.array(Nx x Nx x N**2)
+        array with the overall PSFs for each detector element
+    detPSF : np.array(Nx x Nx x N**2)
+        array with the detection PSFs for each detector element
+    exPSF : np.array(Nx x Nx)
+        array with the excitation PSF
+
+    """
+
+    # simulate detector array
+
+    grid = gridPar.copy()
+    grid.Nz = 1
+    stack = [z_shift, z_shift]
+
+    PSF, detPSFrot, exPSF = SPAD_PSF_3D(grid, exPar, emPar, stedPar, spad, n_photon_excitation, stack, False)
+
+    PSF = np.squeeze(PSF)
+    detPSFrot = np.squeeze(detPSFrot)
+    exPSF = np.squeeze(exPSF)
+
+    if normalize is True:
+        PSF /= PSF.sum()
+        detPSFrot /= detPSFrot.sum()
+        exPSF /= exPSF.sum()
+
+    return PSF, detPSFrot, exPSF
