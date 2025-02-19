@@ -367,7 +367,7 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitat
     # simulate detector array
 
     if spad is None:
-        pinholes = custom_detector(gridPar)
+        pinholes = custom_detector(gridPar, device)
     else:
         pinholes = spad
 

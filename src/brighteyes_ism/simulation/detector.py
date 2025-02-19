@@ -5,6 +5,7 @@ import torch
 
 from .utils import partial_convolution
 
+
 def circle(n, radius):
     """
     It calculates a single binary mask with the shape of a circle.
@@ -178,7 +179,7 @@ def det_coords(n, geometry):
     return s
 
 
-def pinhole_array(s, nx, mag, pxsize, pxdim, pinhole_shape):
+def pinhole_array(s, nx, mag, pxsize, pxdim, pinhole_shape, device):
     """
     It calculates Nx x Nx x Nch array of binary masks, describing a detector array.
 
@@ -202,8 +203,6 @@ def pinhole_array(s, nx, mag, pxsize, pxdim, pinhole_shape):
     detector : np.ndarray (Nx x Nx x Nch)
         Numpy array of binary masks. Each channel is a pinhole in a different position.
     """
-
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     radius = pxdim / mag / pxsize / 2
     nch = s.shape[1]
@@ -252,10 +251,12 @@ def transform_detector(gridPar, detector):
         spad_rot = rotate(spad_rot, theta)
         spad_rot = torch.movedim(spad_rot, 0, -1)
 
+    spad_rot[spad_rot < 1e-2] = 0
+
     return spad_rot
 
 
-def custom_detector(grid):
+def custom_detector(grid, device):
     """
     It calculates Nx x Nx x Nch array of binary masks, describing a detector array.
 
@@ -279,25 +280,27 @@ def custom_detector(grid):
 
     s = np.round(s / grid.M / grid.pxsizex).astype('int')
 
-    detector = pinhole_array(s, grid.Nx, grid.M, grid.pxsizex, grid.pxdim, grid.pinhole_shape)
+    detector = pinhole_array(s, grid.Nx, grid.M, grid.pxsizex, grid.pxdim, grid.pinhole_shape, device)
 
     detector = transform_detector(grid, detector)
 
     return detector
 
-def hex_to_airy(s):
 
-    idx_array = [22, 28, 29, 23, 16, 15, 21, 27, 34, 35, 36, 30, 24, 17, 10, 9, 8, 14, 20, 26, 33, 41, 42, 37, 31, 18, 11, 3, 2, 7, 13, 19]
+def hex_to_airy(s):
+    idx_array = [22, 28, 29, 23, 16, 15, 21, 27, 34, 35, 36, 30, 24, 17, 10, 9, 8, 14, 20, 26, 33, 41, 42, 37, 31, 18,
+                 11, 3, 2, 7, 13, 19]
 
     return s[..., idx_array]
 
 
 def airy_to_hex(s):
-
     ss = np.ones((s.shape[:-1] + (45,))) * np.nan
 
-    idx1 = [2, 3, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 41, 42]
-    idx2 = [28, 27, 29, 16, 15, 14, 26, 30, 17, 5, 4, 13, 25, 31, 18, 6, 0, 3, 12, 19, 7, 1, 2, 11, 24, 20, 8, 9, 10, 23, 21, 22]
+    idx1 = [2, 3, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 26, 27, 28, 29, 30, 31, 33, 34, 35,
+            36, 37, 41, 42]
+    idx2 = [28, 27, 29, 16, 15, 14, 26, 30, 17, 5, 4, 13, 25, 31, 18, 6, 0, 3, 12, 19, 7, 1, 2, 11, 24, 20, 8, 9, 10,
+            23, 21, 22]
 
     ss[..., idx1] = s[..., idx2]
 
