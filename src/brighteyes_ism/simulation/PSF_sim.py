@@ -7,7 +7,6 @@ from poppy.zernike import zern_name
 import copy as cp
 
 import torch
-from torchvision.transforms.functional import rotate
 
 from numbers import Number
 
@@ -367,7 +366,10 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitat
 
     # simulate detector array
 
-    pinholes = generate_pinhole_array(gridPar, spad)
+    if spad is None:
+        pinholes = custom_detector(gridPar)
+    else:
+        pinholes = spad
 
     # Simulate ism psfs
 
@@ -457,30 +459,3 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation=1, stedPar=None, z_sh
         exPSF /= exPSF.sum()
 
     return PSF, detPSFrot, exPSF
-
-
-def generate_pinhole_array(gridPar, spad=None):
-
-    if spad is None:
-        spad = custom_detector(gridPar)
-    Nch = spad.shape[-1]
-
-    spad_rot = spad.clone()
-
-    if gridPar.mirroring == -1:
-        if np.ndim(gridPar.N) == 0:
-            nx = ny = gridPar.N
-        else:
-            nx, ny = gridPar.N
-
-        spad_rot = spad_rot.reshape(gridPar.Nx, gridPar.Nx, nx, ny)
-        spad_rot = torch.flip(spad_rot, axis=-1)
-        spad_rot = spad_rot.reshape(gridPar.Nx, gridPar.Nx, Nch)
-
-    if gridPar.rotation != 0:
-        theta = np.rad2deg(gridPar.rotation)
-        spad_rot = torch.movedim(spad_rot, -1, 0)
-        spad_rot = rotate(spad_rot, theta)
-        spad_rot = torch.movedim(spad_rot, 0, -1)
-
-    return spad_rot

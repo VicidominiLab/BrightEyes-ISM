@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.signal import convolve
+from torchvision.transforms.functional import rotate
 from skimage.draw import polygon
 import torch
 
@@ -230,6 +230,31 @@ def pinhole_array(s, nx, mag, pxsize, pxdim, pinhole_shape):
     return detector
 
 
+def transform_detector(gridPar, detector):
+
+    Nch = detector.shape[-1]
+
+    spad_rot = detector.clone()
+
+    if gridPar.mirroring == -1:
+        if np.ndim(gridPar.N) == 0:
+            nx = ny = gridPar.N
+        else:
+            nx, ny = gridPar.N
+
+        spad_rot = spad_rot.reshape(gridPar.Nx, gridPar.Nx, nx, ny)
+        spad_rot = torch.flip(spad_rot, axis=-1)
+        spad_rot = spad_rot.reshape(gridPar.Nx, gridPar.Nx, Nch)
+
+    if gridPar.rotation != 0:
+        theta = np.rad2deg(gridPar.rotation)
+        spad_rot = torch.movedim(spad_rot, -1, 0)
+        spad_rot = rotate(spad_rot, theta)
+        spad_rot = torch.movedim(spad_rot, 0, -1)
+
+    return spad_rot
+
+
 def custom_detector(grid):
     """
     It calculates Nx x Nx x Nch array of binary masks, describing a detector array.
@@ -256,8 +281,9 @@ def custom_detector(grid):
 
     detector = pinhole_array(s, grid.Nx, grid.M, grid.pxsizex, grid.pxdim, grid.pinhole_shape)
 
-    return detector
+    detector = transform_detector(grid, detector)
 
+    return detector
 
 def hex_to_airy(s):
 

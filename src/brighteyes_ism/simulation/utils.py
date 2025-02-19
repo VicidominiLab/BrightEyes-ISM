@@ -1,6 +1,7 @@
 from torch.fft import fftn, ifftn, ifftshift
 from torch import real, einsum
 
+
 def partial_convolution(psf, pinhole, dim1='ijk', dim2='jkl', axis='jk'):
     dim3 = dim1 + dim2
     dim3 = ''.join(sorted(set(dim3), key=dim3.index))
