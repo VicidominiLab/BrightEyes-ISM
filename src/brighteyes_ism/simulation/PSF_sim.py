@@ -277,7 +277,7 @@ def singlePSF(par, pxsizex, Nx, rangez, nz, device: str = 'cpu'):
         'fov': Nx * pxsizex,
         'n_pix_pupil': par.mask_sampl,
         'na': par.na,
-        'n_i': par.n,
+        'n_i0': par.n,
         'wavelength': par.wl / par.n,
         'e0x': np.cos(np.deg2rad(par.gamma)),
         'e0y': np.sin(np.deg2rad(par.gamma)) * np.exp(1j * np.deg2rad(par.beta))
