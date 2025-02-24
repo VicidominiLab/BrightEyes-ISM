@@ -2,7 +2,7 @@ import numpy as np
 from skimage.transform import rotate
 
 from psf_generator.propagators import VectorialCartesianPropagator
-from poppy.zernike import zern_name
+from poppy.zernike import zern_name, zernike1
 
 import copy as cp
 
@@ -232,6 +232,16 @@ class simSettings:
             names.append(zern_name(index[i]))
 
         return names
+
+    @property
+    def wavefront(self):
+        if self.abe_index is None:
+            wavefront = zernike1(1, npix=self.mask_sampl, outside = np.nan)
+        else:
+            wavefront = np.zeros((self.mask_sampl, self.mask_sampl))
+            for n, s in enumerate(self.abe_index):
+                wavefront += self.abe_ampli[n]*zernike1(s, npix=self.mask_sampl)
+        return wavefront
 
     def copy(self):
         return cp.copy(self)
