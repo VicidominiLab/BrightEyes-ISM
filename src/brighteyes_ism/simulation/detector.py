@@ -223,8 +223,7 @@ def pinhole_array(s, nx, mag, pxsize, pxdim, pinhole_shape, device):
         raise Exception("Pinhole shape not valid. Select 'square', 'cirle', or 'hexagon'.")
 
     pinhole = torch.from_numpy(pinhole).to(device)
-    print(pinhole.shape)
-    print(img.shape)
+
     detector = partial_convolution(img, pinhole, 'ijk', 'ij', 'ij')
 
     return detector
