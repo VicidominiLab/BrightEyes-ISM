@@ -326,7 +326,7 @@ def singlePSF(par, pxsizex, Nx, rangez, nz, device: str = 'cpu'):
 
 
 def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitation: int = 1,
-                stack: str = 'symmetrical', normalize: bool = True, process: str = 'gpu'):
+                stack: str = 'symmetrical', normalize: bool = True, process: str = 'gpu', output: str = 'numpy'):
     """
     It calculates a z-stack of PSFs for all the elements of the SPAD array detector.
 
@@ -412,11 +412,15 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitat
         for i, z in enumerate(zeta):
             PSF[i, :, :, :] /= focal_flux
 
-    return PSF.cpu().detach().numpy(), detPSF.cpu().detach().numpy(), exPSF.cpu().detach().numpy()
-
+    if output == 'numpy':
+        return PSF.cpu().detach().numpy(), detPSF.cpu().detach().numpy(), exPSF.cpu().detach().numpy()
+    elif output == 'tensor':
+        return PSF, detPSF, exPSF
+    else:
+        raise Exception('Output unknown')
 
 def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation=1, stedPar=None, z_shift=0, spad=None, normalize=True,
-                process: str = 'gpu'):
+                process: str = 'gpu', output: str = 'numpy'):
     """
     Calculate PSFs for all pixels of the SPAD array by using FFTs
 
@@ -457,7 +461,7 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation=1, stedPar=None, z_sh
     grid.Nz = 1
     stack = [z_shift, z_shift]
 
-    PSF, detPSFrot, exPSF = SPAD_PSF_3D(grid, exPar, emPar, stedPar, spad, n_photon_excitation, stack, False, process)
+    PSF, detPSFrot, exPSF = SPAD_PSF_3D(grid, exPar, emPar, stedPar, spad, n_photon_excitation, stack, False, process, output=output)
 
     PSF = np.squeeze(PSF)
     detPSFrot = np.squeeze(detPSFrot)
