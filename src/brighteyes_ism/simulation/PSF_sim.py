@@ -2,6 +2,7 @@ import numpy as np
 from skimage.transform import rotate
 
 from psf_generator.propagators import VectorialCartesianPropagator
+from psf_generator.utils import create_special_pupil, create_zernike_aberrations
 from poppy.zernike import zern_name, zernike1
 
 import copy as cp
@@ -143,8 +144,6 @@ class simSettings:
         phase mask
         None = no mask
         'VP' = vortex phase plate
-        'Zernike' = zernike polynomials
-        custom function ( mask = lambda rho, phi, w0, f, k: ... )
     mask_sampl : int
         entrance field and mask sampling (# points)
     sted_sat : float
@@ -235,13 +234,29 @@ class simSettings:
 
     @property
     def wavefront(self):
-        if self.abe_index is None:
-            wavefront = zernike1(1, npix=self.mask_sampl, outside = np.nan)
+        if self.abe_index is not None:
+            zernike = np.zeros(np.max(self.abe_index) + 1)
+            zernike[self.abe_index] = self.abe_ampli
         else:
-            wavefront = np.zeros((self.mask_sampl, self.mask_sampl))
-            for n, s in enumerate(self.abe_index):
-                wavefront += self.abe_ampli[n]*zernike1(s, npix=self.mask_sampl)
-        return wavefront
+            zernike = np.zeros(1)
+
+        zer_wf = create_zernike_aberrations(zernike, self.mask_sampl, 'cartesian')
+
+        if self.mask is not None:
+            mask_wf = create_special_pupil(self.mask_sampl, self.mask)
+        else:
+            mask_wf = 1
+
+        return zer_wf * mask_wf
+
+        if False:
+            if self.abe_index is None:
+                wavefront = zernike1(1, npix=self.mask_sampl, outside = np.nan)
+            else:
+                wavefront = np.zeros((self.mask_sampl, self.mask_sampl))
+                for n, s in enumerate(self.abe_index):
+                    wavefront += self.abe_ampli[n]*zernike1(s, npix=self.mask_sampl)
+            return wavefront
 
     def copy(self):
         return cp.copy(self)
@@ -302,9 +317,9 @@ def singlePSF(par, pxsizex, Nx, rangez, nz, device: str = 'cpu'):
 
     # Phase Mask
 
-    if par.mask == 'VP':
+    if par.mask is not None:
         kwargs.update({
-            'special_phase_mask': 'vortex'
+            'special_phase_mask': par.mask
         })
 
     if par.abe_index is not None:
