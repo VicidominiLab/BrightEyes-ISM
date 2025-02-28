@@ -2,7 +2,7 @@ import numpy as np
 from skimage.transform import rotate
 
 from psf_generator.propagators import VectorialCartesianPropagator
-from psf_generator.utils import create_special_pupil, create_zernike_aberrations
+from psf_generator.utils.zernike import create_special_pupil, create_zernike_aberrations
 from poppy.zernike import zern_name, zernike1
 
 import copy as cp
@@ -188,7 +188,6 @@ class simSettings:
         self.mask = mask  # phase mask
         #   None = no mask
         #   'VP' = vortex phase plate
-        #   'Zernike' = zernike polynomials
         self.mask_sampl = mask_sampl  # phase mask sampling
         self.sted_sat = sted_sat  # STED maximum saturation factor
         self.sted_pulse = sted_pulse  # STED pulse duration [ns]
@@ -235,10 +234,10 @@ class simSettings:
     @property
     def wavefront(self):
         if self.abe_index is not None:
-            zernike = np.zeros(np.max(self.abe_index) + 1)
-            zernike[self.abe_index] = self.abe_ampli
+            zernike = torch.zeros(np.max(self.abe_index) + 1)
+            zernike[self.abe_index] = torch.from_numpy(self.abe_ampli).float()
         else:
-            zernike = np.zeros(1)
+            zernike = torch.zeros(1)
 
         zer_wf = create_zernike_aberrations(zernike, self.mask_sampl, 'cartesian')
 
@@ -247,16 +246,14 @@ class simSettings:
         else:
             mask_wf = 1
 
-        return zer_wf * mask_wf
+        wf = torch.angle(zer_wf * mask_wf).cpu().detach().numpy()
 
-        if False:
-            if self.abe_index is None:
-                wavefront = zernike1(1, npix=self.mask_sampl, outside = np.nan)
-            else:
-                wavefront = np.zeros((self.mask_sampl, self.mask_sampl))
-                for n, s in enumerate(self.abe_index):
-                    wavefront += self.abe_ampli[n]*zernike1(s, npix=self.mask_sampl)
-            return wavefront
+        x = np.linspace(-1, 1, num=self.mask_sampl)
+        xx, yy = np.meshgrid(x,x)
+        r = np.sqrt(xx**2 + yy**2)
+        pupil = np.where(r < 1, 1, np.nan)
+
+        return wf * pupil
 
     def copy(self):
         return cp.copy(self)
