@@ -1,15 +1,11 @@
 import numpy as np
-from skimage.transform import rotate
+import torch
+from numbers import Number
+import copy as cp
 
 from psf_generator.propagators import VectorialCartesianPropagator
 from psf_generator.utils.zernike import create_special_pupil, create_zernike_aberrations
 from poppy.zernike import zern_name
-
-import copy as cp
-
-import torch
-
-from numbers import Number
 
 from .detector import custom_detector
 from .utils import partial_convolution
