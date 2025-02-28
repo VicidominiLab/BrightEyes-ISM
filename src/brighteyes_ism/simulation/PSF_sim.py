@@ -3,7 +3,7 @@ from skimage.transform import rotate
 
 from psf_generator.propagators import VectorialCartesianPropagator
 from psf_generator.utils.zernike import create_special_pupil, create_zernike_aberrations
-from poppy.zernike import zern_name, zernike1
+from poppy.zernike import zern_name
 
 import copy as cp
 
@@ -249,7 +249,7 @@ class simSettings:
         wf = torch.angle(zer_wf * mask_wf).cpu().detach().numpy()
 
         x = np.linspace(-1, 1, num=self.mask_sampl)
-        xx, yy = np.meshgrid(x,x)
+        xx, yy = np.meshgrid(x, x)
         r = np.sqrt(xx**2 + yy**2)
         pupil = np.where(r < 1, 1, np.nan)
 
