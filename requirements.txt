@@ -4,9 +4,11 @@ scikit-image
 scikit-learn
 matplotlib
 joblib
-poppy
-PyCustomFocus==2.*
 tqdm
 h5py
 statsmodels
 matplotlib-scalebar
+torch
+torchvision
+zernikepy
+psf-generator
