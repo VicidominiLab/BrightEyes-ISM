@@ -5,7 +5,7 @@ import copy as cp
 
 from psf_generator.propagators import VectorialCartesianPropagator
 from psf_generator.utils.zernike import create_special_pupil, create_zernike_aberrations
-from poppy.zernike import zern_name
+from zernikepy.zernike_polynomials import lookup_table
 
 from .detector import custom_detector
 from .utils import partial_convolution
@@ -216,14 +216,14 @@ class simSettings:
             return 'None'
 
         if np.isscalar(self.abe_index):
-            index = [self.abe_index]
+            zernike_index = [self.abe_index]
         else:
-            index = self.abe_index
+            zernike_index = self.abe_index
 
         names = []
-
-        for i in range(len(index)):
-            names.append(zern_name(index[i]))
+        for name, index in lookup_table.items():
+            if index in zernike_index:
+                names.append(name)
 
         return names
 
