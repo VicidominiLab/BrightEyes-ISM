@@ -231,7 +231,7 @@ class simSettings:
     def wavefront(self):
         if self.abe_index is not None:
             zernike = torch.zeros(np.max(self.abe_index) + 1)
-            zernike[self.abe_index] = torch.from_numpy(self.abe_ampli).float()
+            zernike[self.abe_index] = torch.as_tensor(self.abe_ampli).float()
         else:
             zernike = torch.zeros(1)
 
@@ -316,8 +316,8 @@ def singlePSF(par, pxsizex, Nx, rangez, nz, device: str = 'cpu'):
         })
 
     if par.abe_index is not None:
-        zernike = np.zeros(np.max(par.abe_index) + 1)
-        zernike[par.abe_index] = par.abe_ampli
+        zernike = torch.zeros(np.max(par.abe_index) + 1)
+        zernike[par.abe_index] = torch.as_tensor(par.abe_ampli).float()
         kwargs.update({
             'zernike_coefficients': zernike
         })
@@ -416,9 +416,9 @@ def SPAD_PSF_3D(gridPar, exPar, emPar, stedPar=None, spad=None, n_photon_excitat
 
     if normalize is True:
         idx = np.argwhere(zeta == 0).item()
-        focal_flux = PSF[idx, :, :, :].sum()
+        focal_flux = PSF[idx].sum()
         for i, z in enumerate(zeta):
-            PSF[i, :, :, :] /= focal_flux
+            PSF[i] = PSF[i] / focal_flux
 
     if output == 'numpy':
         return PSF.cpu().detach().numpy(), detPSF.cpu().detach().numpy(), exPSF.cpu().detach().numpy()
@@ -476,8 +476,8 @@ def SPAD_PSF_2D(gridPar, exPar, emPar, n_photon_excitation=1, stedPar=None, z_sh
     exPSF = np.squeeze(exPSF)
 
     if normalize is True:
-        PSF /= PSF.sum()
-        detPSFrot /= detPSFrot.sum()
-        exPSF /= exPSF.sum()
+        PSF = PSF / PSF.sum()
+        detPSFrot =  detPSFrot / detPSFrot.sum()
+        exPSF = exPSF / exPSF.sum()
 
     return PSF, detPSFrot, exPSF
