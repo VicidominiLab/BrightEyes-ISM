@@ -21,12 +21,12 @@ The analysis module contains libraries for:
 
 The simulation module contains libraries for:
 
-* Generation of ISM point spread functions (https://doi.org/10.1016/j.cpc.2022.108315)
+* Generation of ISM point spread functions (https://doi.org/10.48550/arXiv.2502.03170)
 * Generation of tubulin phantom samples
 
 The dataio module contains libraries for:
 
-* Reading the data and metadata from the MCS software (https://github.com/VicidominiLab/BrightEyes-MCS)
+* Reading the data and metadata from the MCS software (https://doi.org/10.21105/joss.07125)
 
 ----------------------------------
 
@@ -43,16 +43,19 @@ or using the version on [PyPI]:
 It requires the following Python packages
 
     numpy
-	scipy
-    matplotlib
-	scikit-image
+    scipy
+    scikit-image
     scikit-learn
-	poppy
-	PyCustomFocus==2.*
-    h5py
+    matplotlib
+    joblib
     tqdm
-	statsmodels
-	matplotlib-scalebar
+    h5py
+    statsmodels
+    matplotlib-scalebar
+    torch
+    torchvision
+    zernikepy
+    psf-generator
 
 ## Documentation
 
