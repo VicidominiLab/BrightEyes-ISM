@@ -242,7 +242,7 @@ def transform_detector(gridPar, detector):
             nx, ny = gridPar.N
 
         spad_rot = spad_rot.reshape(gridPar.Nx, gridPar.Nx, nx, ny)
-        spad_rot = torch.flip(spad_rot, axis=-1)
+        spad_rot = torch.flip(spad_rot, dims=[-1])
         spad_rot = spad_rot.reshape(gridPar.Nx, gridPar.Nx, Nch)
 
     if gridPar.rotation != 0:
