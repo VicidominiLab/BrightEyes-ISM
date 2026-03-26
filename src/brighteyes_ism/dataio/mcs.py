@@ -1,5 +1,5 @@
 import h5py
-
+import re
 
 class metadata:
     """
@@ -37,6 +37,14 @@ class metadata:
         calibration value of the y pixel size (um/V).
     calib_z : float
         calibration value of the y pixel size (um/V).
+    bitfile : str
+        Bitfile name or path stored in the acquisition metadata.
+    dfd_freq : int | None
+        DFD repetition frequency parsed from the bitfile name, in MHz when available.
+    dfd_nbins : int | None
+        DFD histogram bin count parsed from the bitfile name, when available.
+    dfd_activate : bool
+        Whether DFD mode was active according to the FPGA configuration.
         
     Methods
     -------
@@ -97,6 +105,25 @@ class metadata:
         self.calib_x = f['configurationGUI'].attrs['calib_x']
         self.calib_y = f['configurationGUI'].attrs['calib_y']
         self.calib_z = f['configurationGUI'].attrs['calib_z']
+        
+        try:
+            self.bitfile = f["configurationGUI"].attrs["bitFile"]
+        except Exception:
+            self.bitfile = ""
+
+        self.dfd_freq = None
+        self.dfd_nbins = None
+        self.dfd_activate = False
+        
+        try:
+            self.dfd_freq, self.dfd_nbins = self.parse_dfd_metadata_from_bitfile_name(self.bitfile)
+        except Exception:
+            self.dfd_freq, self.dfd_nbins = None, None
+
+        try:
+            self.dfd_activate = f["configurationFPGA"].attrs["DFD_Activate"]
+        except Exception:
+            self.dfd_activate = False
 
     @property
     def pxdwelltime(self):
@@ -148,6 +175,28 @@ class metadata:
     def duration(self):
         # total measurement duration in s
         return self.nmicroim * self.dt * 1e-6
+    
+    @staticmethod
+    def parse_dfd_metadata_from_bitfile_name(bitfile="", default_cycle_mhz=40):
+        """
+        Infer DFD metadata from a bitfile name token like ``40M91``.
+
+        Accept any ``xxxxxMyyyyyyy`` token found in the basename, provided:
+        - 3 < xxxxx < 100
+        - 3 < yyyyyyy < 1000
+        """
+
+        filename = str(bitfile).replace("\\", "/").split("/")[-1]
+        match = re.search(r"(?P<cycle>\d+)M(?P<bins>\d+)", filename, re.IGNORECASE)
+        if not match:
+            return default_cycle_mhz, None
+
+        parsed_cycle_mhz = int(match.group("cycle"))
+        parsed_bins = int(match.group("bins"))
+        if not (3 < parsed_cycle_mhz < 100 and 3 < parsed_bins < 1000):
+            return default_cycle_mhz, None
+
+        return parsed_cycle_mhz, parsed_bins
 
     def Print(self):
         dic = self.__dict__
@@ -229,3 +278,4 @@ def load(fname: str, key: str = 'data', data_format: str = 'numpy'):
             return data[:], meta
         elif data_format == 'h5':
             return data, meta
+        
