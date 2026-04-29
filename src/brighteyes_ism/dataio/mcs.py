@@ -1,3 +1,5 @@
+from fileinput import filename
+
 import h5py
 import re
 import warnings
@@ -112,14 +114,9 @@ class metadata:
         except Exception:
             self.bitfile = ""
 
-        self.dfd_freq = None
-        self.dfd_nbins = None
-        self.dfd_activate = False
-        
-        try:
-            self.dfd_freq, self.dfd_nbins = self.parse_dfd_metadata_from_bitfile_name(self.bitfile)
-        except Exception:
-            self.dfd_freq, self.dfd_nbins = None, None
+        self._dfd_metadata_loaded = False
+        self._dfd_freq = None
+        self._dfd_nbins = None
 
         try:
             self.dfd_activate = f["configurationFPGA"].attrs["DFD_Activate"]
@@ -176,6 +173,23 @@ class metadata:
     def duration(self):
         # total measurement duration in s
         return self.nmicroim * self.dt * 1e-6
+
+    def _load_dfd_metadata_from_bitfile_name(self):
+        if self._dfd_metadata_loaded:
+            return
+
+        self._dfd_metadata_loaded = True
+        self._dfd_freq, self._dfd_nbins = self.parse_dfd_metadata_from_bitfile_name(self.bitfile)
+
+    @property
+    def dfd_freq(self):
+        self._load_dfd_metadata_from_bitfile_name()
+        return self._dfd_freq
+
+    @property
+    def dfd_nbins(self):
+        self._load_dfd_metadata_from_bitfile_name()
+        return self._dfd_nbins
     
     @staticmethod
     def parse_dfd_metadata_from_bitfile_name(bitfile="", default_cycle_mhz=40):
@@ -191,9 +205,20 @@ class metadata:
         match = re.search(r"(?P<cycle>\d+)M(?P<bins>\d+)", filename, re.IGNORECASE)
         if not match:
             warnings.warn(
-                "Could not parse DFD metadata from bitfile name "
-                f"{filename!r}; using default cycle frequency "
-                f"{default_cycle_mhz} MHz and no DFD bin count.",
+                (
+                    "\n"
+                    "================ WARNING ==============\n"
+                    "brighteyes_ism.dataio.mcs.load() failed to extract DFD metadata "
+                    f"from the bitfile name ({filename!r}).\n\n"
+                    "Falling back to defaults:\n"
+                    f"  - Laser cycle frequency: {default_cycle_mhz} MHz\n"
+                    "  - DFD bin count: NOT set\n\n"
+                    "If your data was acquired in DFD mode, THESE DEFAULTS ARE VERY "
+                    "LIKELY WRONG and will corrupt your analysis.\n\n"
+                    "You must explicitly set the correct DFD parameters in your "
+                    "analysis code.\n"
+                    "==========================================="
+                ),
                 stacklevel=2,
             )
             return default_cycle_mhz, None
@@ -202,9 +227,20 @@ class metadata:
         parsed_bins = int(match.group("bins"))
         if not (3 < parsed_cycle_mhz < 100 and 3 < parsed_bins < 1000):
             warnings.warn(
-                "Parsed DFD metadata from bitfile name "
-                f"{filename!r} is out of the supported range; using default "
-                f"cycle frequency {default_cycle_mhz} MHz and no DFD bin count.",
+                (
+                    "\n"
+                    "================ WARNING ==============\n"
+                    "brighteyes_ism.dataio.mcs.load() failed to extract DFD metadata "
+                    f"from the bitfile name ({filename!r}).\n\n"
+                    "Falling back to defaults:\n"
+                    f"  - Laser cycle frequency: {default_cycle_mhz} MHz\n"
+                    "  - DFD bin count: NOT set\n\n"
+                    "If your data was acquired in DFD mode, THESE DEFAULTS ARE VERY "
+                    "LIKELY WRONG and will corrupt your analysis.\n\n"
+                    "You must explicitly set the correct DFD parameters in your "
+                    "analysis code.\n"
+                    "==========================================="
+                ),
                 stacklevel=2,
             )
             return default_cycle_mhz, None
