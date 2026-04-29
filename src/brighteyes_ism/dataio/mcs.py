@@ -1,5 +1,6 @@
 import h5py
 import re
+import warnings
 
 class metadata:
     """
@@ -189,11 +190,23 @@ class metadata:
         filename = str(bitfile).replace("\\", "/").split("/")[-1]
         match = re.search(r"(?P<cycle>\d+)M(?P<bins>\d+)", filename, re.IGNORECASE)
         if not match:
+            warnings.warn(
+                "Could not parse DFD metadata from bitfile name "
+                f"{filename!r}; using default cycle frequency "
+                f"{default_cycle_mhz} MHz and no DFD bin count.",
+                stacklevel=2,
+            )
             return default_cycle_mhz, None
 
         parsed_cycle_mhz = int(match.group("cycle"))
         parsed_bins = int(match.group("bins"))
         if not (3 < parsed_cycle_mhz < 100 and 3 < parsed_bins < 1000):
+            warnings.warn(
+                "Parsed DFD metadata from bitfile name "
+                f"{filename!r} is out of the supported range; using default "
+                f"cycle frequency {default_cycle_mhz} MHz and no DFD bin count.",
+                stacklevel=2,
+            )
             return default_cycle_mhz, None
 
         return parsed_cycle_mhz, parsed_bins
