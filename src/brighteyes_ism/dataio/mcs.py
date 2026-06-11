@@ -1,8 +1,30 @@
-from fileinput import filename
-
 import h5py
 import re
 import warnings
+
+
+DATASET_KEY_ALIASES_V006 = {
+    "data": ("raw/spad",),
+    "spad": ("raw/spad",),
+    "raw/spad": ("raw/spad",),
+    "data_channels_extra": ("raw/aux",),
+    "aux": ("raw/aux",),
+    "raw/aux": ("raw/aux",),
+    "data_analog": ("raw/analog",),
+    "analog": ("raw/analog",),
+    "raw/analog": ("raw/analog",),
+}
+
+
+def _decode_attr(value):
+    if isinstance(value, bytes):
+        return value.decode()
+    return value
+
+
+def _file_version(f):
+    return str(_decode_attr(f.attrs.get("data_format_version", "")))
+
 
 class metadata:
     """
@@ -257,6 +279,128 @@ class metadata:
             print(str(values[n]))
 
 
+def data_v006(f, key="data"):
+    candidates = DATASET_KEY_ALIASES_V006.get(str(key).strip("/"), (str(key).strip("/"),))
+    for candidate in candidates:
+        if candidate in f and isinstance(f[candidate], h5py.Dataset):
+            return f[candidate]
+    tried = ", ".join(candidates)
+    raise KeyError(f"could not find dataset {key!r}; tried {tried}")
+
+
+class metadata_v006:
+    """
+    Metadata reader for BrightEyes MCS HDF5 schema 0.0.6.
+
+    The 0.0.6 schema exposes normalized metadata under /raw/metadata and
+    /raw/metadata/acquisition/*; this reader intentionally avoids /raw/legacy
+    for routine fields.
+    """
+
+    def __init__(self, f):
+        self.version = _file_version(f)
+        self.comment = _decode_attr(f.attrs["comment"])
+
+        normalized = f["raw/metadata"].attrs
+        timing = f["raw/metadata/acquisition/timing"].attrs
+
+        self.rangex = normalized["range_x_um"]
+        self.rangey = normalized["range_y_um"]
+        self.rangez = normalized["range_z_um"]
+
+        self.nbin = normalized["time_bins"]
+        self.dt = normalized["time_resolution_us"]
+
+        self.nx = normalized["nx"]
+        self.ny = normalized["ny"]
+        self.nz = normalized["nz"]
+        self.nrep = normalized["nrep"]
+
+        self.calib_x = float("nan")
+        self.calib_y = float("nan")
+        self.calib_z = float("nan")
+        self.bitfile = ""
+
+        self.offset_x_um = normalized["offset_x_um"]
+        self.offset_y_um = normalized["offset_y_um"]
+        self.offset_z_um = normalized["offset_z_um"]
+        self.pixel_size_x_um = normalized["pixel_size_x_um"]
+        self.pixel_size_y_um = normalized["pixel_size_y_um"]
+        self.pixel_size_z_um = normalized["pixel_size_z_um"]
+        self.time_bin_ns = normalized["time_bin_ns"]
+        self.pixel_dwell_time_us = normalized["pixel_dwell_time_us"]
+        self.pixel_dwell_time_ns = normalized["pixel_dwell_time_ns"]
+
+        self.dfd_activate = normalized["dfd_active"]
+        self.dfd_active = self.dfd_activate
+        self._dfd_freq = float(timing["laser_frequency_mhz"])
+        self._dfd_nbins = int(timing["dfd_time_bins"])
+        self._dfd_metadata_loaded = True
+        self.dfd_trigger_selector = timing["dfd_trigger_selector"]
+        self.dfd_laser_sync_debug = timing["dfd_laser_sync_debug"]
+
+    @property
+    def pxdwelltime(self):
+        return self.pixel_dwell_time_us
+
+    @property
+    def frametime(self):
+        return self.pxdwelltime * self.nx * self.ny / 1e6
+
+    @property
+    def framerate(self):
+        return 1 / self.frametime
+
+    @property
+    def dx(self):
+        return self.pixel_size_x_um
+
+    @property
+    def dy(self):
+        return self.pixel_size_y_um
+
+    @property
+    def dz(self):
+        return self.pixel_size_z_um
+
+    @property
+    def pxszizes(self):
+        return [self.dz, self.dy, self.dx]
+
+    @property
+    def pxsizes(self):
+        return self.pxszizes
+
+    @property
+    def nmicroim(self):
+        return self.nx * self.ny * self.nz * self.nrep * self.nbin
+
+    @property
+    def ndatapoints(self):
+        return 2 * self.nmicroim
+
+    @property
+    def duration(self):
+        return self.nmicroim * self.dt * 1e-6
+
+    @property
+    def dfd_freq(self):
+        return self._dfd_freq
+
+    @property
+    def dfd_nbins(self):
+        return self._dfd_nbins
+
+    def Print(self):
+        dic = self.__dict__
+        names = list(dic)
+        values = list(dic.values())
+        for n, name in enumerate(names):
+            print(name, end='')
+            print(' ' * int(14 - len(name)), end='')
+            print(str(values[n]))
+
+
 def metadata_load(fname: str):
     '''
     It loads the metadata of a mcs h5 file.
@@ -274,7 +418,10 @@ def metadata_load(fname: str):
     '''
 
     with h5py.File(fname, "r") as f:
-        meta = metadata(f)
+        if _file_version(f) == "0.0.6":
+            meta = metadata_v006(f)
+        else:
+            meta = metadata(f)
         return meta
 
 
@@ -294,7 +441,10 @@ def metadata_print(fname: str):
     '''
 
     with h5py.File(fname, "r") as f:
-        meta = metadata(f)
+        if _file_version(f) == "0.0.6":
+            meta = metadata_v006(f)
+        else:
+            meta = metadata(f)
         meta.Print()
 
 
@@ -321,8 +471,12 @@ def load(fname: str, key: str = 'data', data_format: str = 'numpy'):
     '''
 
     with h5py.File(fname, "r") as f:
-        data = f[key]
-        meta = metadata(f)
+        if _file_version(f) == "0.0.6":
+            data = data_v006(f, key)
+            meta = metadata_v006(f)
+        else:
+            data = f[key]
+            meta = metadata(f)
         if data_format == 'numpy':
             return data[:], meta
         elif data_format == 'h5':
